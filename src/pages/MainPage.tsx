@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import { useAppDispatch, type RootState } from "../redux/store";
 import { getSelectedCategory } from "../redux/userSlice";
 import Loading from "../components/Loading";
+import { Component12 } from "../components/Component12";
 
 export const MainPage: React.FC = () => {
   const [currentComponent, setCurrentComponent] = useState("Component1");
@@ -23,7 +24,7 @@ export const MainPage: React.FC = () => {
   }, []);
 
   const handleGoClick = () => {
-    setCurrentComponent("Component11"); // All "Go" buttons lead to ComponentFinal
+    setCurrentComponent("Component12"); // All "Go" buttons lead to ComponentFinal
   };
 
   const handleGoCom1Click = () => {
@@ -86,6 +87,14 @@ export const MainPage: React.FC = () => {
       case "Component11":
         return (
           <Component11
+            onGoCom1Click={handleGoCom1Click}
+            categoryId={categoryId || ""}
+            categoryName={categoryName || ""}
+          />
+        );
+      case "Component12":
+        return (
+          <Component12
             onGoCom1Click={handleGoCom1Click}
             categoryId={categoryId || ""}
             categoryName={categoryName || ""}
