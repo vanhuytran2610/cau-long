@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ComponentMeme2 } from "./ComponentMeme2";
 import { FormComponent } from "./FormComponent";
-import { CameraSmile01Icon, SmileIcon } from "hugeicons-react";
+import { CameraSmile01Icon } from "hugeicons-react";
 
 export const Component11: React.FC<{
   onGoCom1Click: () => void;
