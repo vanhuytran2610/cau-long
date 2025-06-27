@@ -11,7 +11,7 @@ export const Component11: React.FC<{
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowDelayedContent(true);
-    }, 4000);
+    }, 1500);
 
     return () => clearTimeout(timer); // Cleanup on unmount
   }, []);
