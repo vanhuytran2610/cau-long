@@ -4,11 +4,12 @@ import { ComponentMeme1 } from "./ComponentMeme1";
 export const Component1: React.FC<{
   onGoClick: () => void;
   onGoCom3Click: () => void;
-}> = ({ onGoClick, onGoCom3Click }) => {
+  categoryName: string;
+}> = ({ onGoClick, onGoCom3Click, categoryName }) => {
   return (
-    <div className="flex flex-col items-center justify-center mt-24">
+    <div className="flex flex-col items-center justify-center my-24">
       <p className="text-red-600 font-primaryBold text-xl text-center">
-        Ê, đi đánh cầu lông không?
+        {`Ê, đi đánh cầu lông ${categoryName ? categoryName : ""} không?`}
       </p>
       <div className="flex flex-row items-center justify-center my-8">
         <button

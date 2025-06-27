@@ -6,7 +6,7 @@ export const Component10: React.FC<{
   onGoCom11Click: () => void;
 }> = ({ onGoClick, onGoCom11Click }) => {
   return (
-    <div className="flex flex-col items-center justify-center mt-8 sm:mt-0">
+    <div className="flex flex-col items-center justify-center my-4 sm:my-0">
       {/* <p className="text-red-600 font-primaryBold text-xl text-center">
         
       </p> */}
