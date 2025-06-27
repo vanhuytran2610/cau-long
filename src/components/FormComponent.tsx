@@ -52,6 +52,11 @@ export const FormComponent: React.FC<{
     onGoCom1Click();
   };
 
+  const handleNextTime = () => {
+    onGoCom1Click();
+    dispatch(clearSubmitError());
+  }
+
   return (
     <>
       <div className="max-w-sm mx-auto">
@@ -79,9 +84,7 @@ export const FormComponent: React.FC<{
             {loading ? <Loading size="sm" /> : `OK`}
           </button>
           <button
-            onClick={() => {
-              onGoCom1Click();
-            }}
+            onClick={handleNextTime}
             className="text-black bg-red-300 hover:bg-red-400 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
           >
             Lần sau
