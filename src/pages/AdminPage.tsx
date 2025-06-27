@@ -554,13 +554,13 @@ export const AdminPage: React.FC = () => {
                     {participants[category._id]?.length ? (
                       <ul className="list-disc pl-0 font-primaryRegular space-y-3">
                         {participants[category._id].map(
-                          (participant: Participant) => (
+                          (participant: Participant, index) => (
                             <li
                               key={participant._id}
                               className="text-sm flex justify-between items-center"
                             >
                               <span>
-                                {participant.name} - {participant.status}
+                                {index + 1} - {participant.name}
                               </span>
                               <button
                                 onClick={() =>
@@ -578,7 +578,9 @@ export const AdminPage: React.FC = () => {
                         )}
                       </ul>
                     ) : (
-                      <p className="text-sm text-gray-600">No participants</p>
+                      <p className="text-sm text-gray-600 font-primaryRegular">
+                        No participants
+                      </p>
                     )}
                   </div>
                 )}
