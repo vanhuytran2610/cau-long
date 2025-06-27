@@ -74,7 +74,7 @@ export const FormComponent: React.FC<{
         <div className="flex space-x-4 items-center justify-center">
           <button
             onClick={() => handleSubmit("tham gia")}
-            className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+            className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
           >
             {loading ? <Loading size="sm" /> : `OK`}
           </button>
@@ -82,7 +82,7 @@ export const FormComponent: React.FC<{
             onClick={() => {
               onGoCom1Click();
             }}
-            className="text-black bg-red-300 hover:bg-red-400 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+            className="text-black bg-red-300 hover:bg-red-400 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
           >
             Lần sau
           </button>
