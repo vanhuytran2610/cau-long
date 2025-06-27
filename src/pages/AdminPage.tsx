@@ -223,16 +223,31 @@ export const AdminPage: React.FC = () => {
     });
   };
 
-  const handleDeleteParticipant = (
+  const handleDeleteParticipant = async (
     participantId: string,
     categoryId: string
   ) => {
-    checkAuthAndDispatch(() => {
+    checkAuthAndDispatch(async () => {
       dispatch(clearCategoryError());
-      dispatch(deleteParticipant({ participantId, categoryId }));
-      dispatch(storeCategoryUpDe(categoryId));
-      setDeleteParticipantInfo(null);
-      addToast("Participant deleted successfully!", "success");
+
+      try {
+        // Delete the participant
+        await dispatch(deleteParticipant({ participantId, categoryId }));
+
+        // Store the category ID for future reference
+        dispatch(storeCategoryUpDe(categoryId));
+
+        // Fetch updated participants list for this category
+        await dispatch(fetchParticipantsByCategory(categoryId));
+
+        // Close the modal and show success message
+        setDeleteParticipantInfo(null);
+        addToast("Participant deleted successfully!", "success");
+      } catch (error) {
+        // Handle any errors that occur during the deletion process
+        addToast("Failed to delete participant", "error");
+        console.error("Error deleting participant:", error);
+      }
     });
   };
 

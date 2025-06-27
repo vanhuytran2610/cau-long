@@ -88,6 +88,7 @@ export const MainPage: React.FC = () => {
           <Component11
             onGoCom1Click={handleGoCom1Click}
             categoryId={categoryId || ""}
+            categoryName={categoryName || ""}
           />
         );
       default:

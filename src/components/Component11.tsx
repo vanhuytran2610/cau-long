@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { ComponentMeme2 } from "./ComponentMeme2";
 import { FormComponent } from "./FormComponent";
+import { CameraSmile01Icon, SmileIcon } from "hugeicons-react";
 
 export const Component11: React.FC<{
   onGoCom1Click: () => void;
   categoryId: string;
-}> = ({ onGoCom1Click, categoryId }) => {
+  categoryName: string;
+}> = ({ onGoCom1Click, categoryId, categoryName }) => {
   const [showDelayedContent, setShowDelayedContent] = useState(false);
 
   useEffect(() => {
@@ -25,14 +27,14 @@ export const Component11: React.FC<{
       }`}
     >
       <p className="text-red-600 font-primaryBold text-3xl text-center pb-10">
-        Mày không thoát được đâu
+        {categoryName} nhé! Mày không thoát được đâu!
       </p>
       <ComponentMeme2 />
       {(categoryId || categoryId !== "") && showDelayedContent && (
         <>
-          <p className="text-green-700 font-primaryBold text-xl text-center pt-10 pb-6">
+          <p className="text-green-700 font-primaryBold text-xl text-center pt-10 pb-6 flex">
             Đùa tí thui!!! Đi thì bạn điền tên rồi bấm "OK" nha, không đi thì
-            bấm "Lần sau" nha
+            bấm "Lần sau" nha <span className="ml-2"><CameraSmile01Icon size={25} /></span>
           </p>
           <FormComponent
             onGoCom1Click={onGoCom1Click}
