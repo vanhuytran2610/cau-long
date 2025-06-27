@@ -31,7 +31,7 @@ export const MainPage: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = "Cầu lông khum?";
+    document.title = "CLB Quảng Đà";
   }, []);
 
   const caseComponent = () => {
