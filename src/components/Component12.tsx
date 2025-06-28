@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ComponentMeme2 } from "./ComponentMeme2";
 import { FormComponent } from "./FormComponent";
-import { CameraSmile01Icon } from "hugeicons-react";
 
 export const Component12: React.FC<{
   onGoCom1Click: () => void;
@@ -32,9 +31,9 @@ export const Component12: React.FC<{
       <ComponentMeme2 />
       {(categoryId || categoryId !== "") && showDelayedContent && (
         <>
-          <p className="text-green-700 font-primaryBold text-xl text-center pt-10 pb-6 flex">
+          <p className="text-green-700 font-primaryBold text-xl text-center pt-10 pb-6">
             Tuyệt vời quá!!! Đi thì bạn điền tên rồi bấm "OK" nha, còn nếu không đi thì
-            bấm "Lần sau" nha <span className="ml-2"><CameraSmile01Icon size={25} /></span>
+            bấm "Lần sau" nha <span className="ml-1">🙋‍♀️🙋‍♂️🙆‍♂️</span>
           </p>
           <FormComponent
             onGoCom1Click={onGoCom1Click}
