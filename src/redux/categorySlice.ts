@@ -9,14 +9,21 @@ export interface Category {
   _id: string;
   name: string;
   is_selected: boolean;
+  isCalculated: boolean;
   __v: number;
 }
 
-interface Participant {
+export interface Participant {
   _id: string;
   name: string;
   status: "tham gia" | "lần sau";
   category: Category;
+  paymentBefore: number;
+  paymentDone: boolean;
+  paidAmount: number;
+  shareAmount: number;
+  otherAmount: number;
+  reasonOtherAmount: string;
   __v: number;
 }
 
@@ -34,10 +41,16 @@ interface CreateCategoryPayload {
   name: string;
 }
 
+export interface UpdateCategoryPaymentPayload {
+  id: string;
+  amount: number;
+}
+
 interface UpdateCategoryPayload {
   id: string;
   name: string;
   is_selected: boolean;
+  payments: UpdateCategoryPaymentPayload[];
 }
 
 interface CreateCategoryResponse {
@@ -46,10 +59,29 @@ interface CreateCategoryResponse {
   data: Category;
 }
 
+interface IResultPayment {
+  id: string;
+  name: string;
+  paymentBefore: number;
+  shareAmount: number;
+  paidAmount: number;
+}
+
+interface IExpense {
+  totalPaid: number;
+  sharePerPerson: number;
+  results: IResultPayment[];
+}
+
+interface IUpdateCategoryResponse {
+  category: Category;
+  expenses: IExpense;
+}
+
 interface UpdateCategoryResponse {
   statusCode: number;
   message: string;
-  data: Category;
+  data: IUpdateCategoryResponse;
 }
 
 export interface ListCategoriesResponse {
@@ -58,10 +90,43 @@ export interface ListCategoriesResponse {
   data: Category[];
 }
 
+interface IListParticipantsResponse {
+  category: Category;
+  participants: Participant[];
+}
+
 interface ListParticipantsResponse {
   statusCode: number;
   message: string;
-  data: Participant[];
+  data: IListParticipantsResponse;
+}
+
+interface UpdateParticipantPayload {
+  categoryId: string;
+  participantId: string;
+  paymentDone: boolean;
+  otherAmount: number;
+  reason: string;
+}
+
+interface IUpdateParticipantResponse {
+  _id: string;
+  name: string;
+  status: string;
+  category: Category;
+  __v: number;
+  paymentBefore: number;
+  shareAmount: number;
+  paidAmount: number;
+  paymentDone: boolean;
+  otherAmount: number;
+  reasonOtherAmount: string;
+}
+
+interface UpdateParticipantResponse {
+  statusCode: number;
+  message: string;
+  data: IUpdateParticipantResponse;
 }
 
 interface DeleteParticipantResponse {
@@ -110,6 +175,7 @@ export const updateCategory = createAsyncThunk<
       {
         name: payload.name,
         is_selected: payload.is_selected,
+        payments: payload.payments,
       },
       {
         headers: { Authorization: `Bearer ${auth.token}` },
@@ -183,6 +249,35 @@ export const fetchParticipantsByCategory = createAsyncThunk<
   }
 );
 
+export const updateParticipant = createAsyncThunk<
+  UpdateParticipantResponse,
+  UpdateParticipantPayload,
+  { state: RootState }
+>(
+  "category/updateParticipant",
+  async (payload, { getState, rejectWithValue }) => {
+    const { auth } = getState() as { auth: { token: string | null } };
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/participants/${payload.categoryId}/${payload.participantId}`,
+        {
+          paymentDone: payload.paymentDone,
+          otherAmount: payload.otherAmount,
+          reason: payload.reason
+        },
+        {
+          headers: { Authorization: `Bearer ${auth.token}` },
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update participant"
+      );
+    }
+  }
+);
+
 export const deleteParticipant = createAsyncThunk<
   DeleteParticipantResponse,
   { participantId: string; categoryId: string },
@@ -244,10 +339,10 @@ const categorySlice = createSlice({
         (state, action: PayloadAction<UpdateCategoryResponse>) => {
           state.loading = false;
           const index = state.categories.findIndex(
-            (cat) => cat._id === action.payload.data._id
+            (cat) => cat._id === action.payload.data.category._id
           );
           if (index !== -1) {
-            state.categories[index] = action.payload.data;
+            state.categories[index] = action.payload.data.category;
           }
         }
       )
@@ -264,9 +359,9 @@ const categorySlice = createSlice({
         (state, action: PayloadAction<UpdateCategoryResponse>) => {
           state.loading = false;
           state.categories = state.categories.filter(
-            (cat) => cat._id !== action.payload.data._id
+            (cat) => cat._id !== action.payload.data.category._id
           );
-          delete state.participants[action.payload.data._id];
+          delete state.participants[action.payload.data.category._id];
         }
       )
       .addCase(deleteCategory.rejected, (state, action) => {
@@ -298,9 +393,29 @@ const categorySlice = createSlice({
       .addCase(fetchParticipantsByCategory.fulfilled, (state, action) => {
         state.participantsLoading = false;
         const categoryId = action.meta.arg; // This should work with your thunk typing
-        state.participants[categoryId] = action.payload.data;
+        state.participants[categoryId] = action.payload.data.participants;
       })
       .addCase(fetchParticipantsByCategory.rejected, (state, action) => {
+        state.participantsLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateParticipant.pending, (state) => {
+        state.participantsLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        updateParticipant.fulfilled,
+        (state, action: PayloadAction<UpdateParticipantResponse>) => {
+          state.participantsLoading = false;
+          const categoryId = action.payload.data.category._id;
+          if (state.participants[categoryId]) {
+            state.participants[categoryId] = state.participants[
+              categoryId
+            ].filter((p) => p._id !== action.payload.data._id);
+          }
+        }
+      )
+      .addCase(updateParticipant.rejected, (state, action) => {
         state.participantsLoading = false;
         state.error = action.payload as string;
       })
