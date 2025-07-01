@@ -40,16 +40,16 @@ interface EditParticipantData {
   reason: string;
 }
 
-interface EditParticipantModalProps {
-  participant: Participant | null;
-  categoryId: string;
-  onClose: () => void;
-  onUpdate: (
-    categoryId: string,
-    participantId: string,
-    data: EditParticipantData
-  ) => Promise<void>;
-}
+// interface EditParticipantModalProps {
+//   participant: Participant | null;
+//   categoryId: string;
+//   onClose: () => void;
+//   onUpdate: (
+//     categoryId: string,
+//     participantId: string,
+//     data: EditParticipantData
+//   ) => Promise<void>;
+// }
 
 export const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -99,6 +99,7 @@ export const AdminPage: React.FC = () => {
   const [participantUpdateError, setParticipantUpdateError] = useState<
     string | null
   >(null);
+  const [currentCategoryId, setCurrentCategoryId] = useState<string>('');
 
   // Helper function to check authentication before dispatch
   const checkAuthAndDispatch = (callback: () => void) => {
@@ -282,6 +283,7 @@ export const AdminPage: React.FC = () => {
     categoryId: string
   ): void => {
     setEditParticipant(participant);
+    setCurrentCategoryId(categoryId);
     setParticipantFormData({
       paymentDone: participant.paymentDone || false,
       otherAmount: participant.otherAmount || 0,
@@ -313,7 +315,7 @@ export const AdminPage: React.FC = () => {
         const result = await dispatch(
           updateParticipant({
             participantId: editParticipant._id,
-            categoryId: editParticipant.category._id,
+            categoryId: currentCategoryId,
             paymentDone: participantFormData.paymentDone,
             otherAmount: participantFormData.otherAmount,
             reason: participantFormData.reason,
@@ -1095,7 +1097,7 @@ export const AdminPage: React.FC = () => {
               {/* Reason Input */}
               <div className="mb-4">
                 <label className="block text-sm font-primaryMedium text-gray-700 mb-2">
-                  Reason:
+                  Note:
                 </label>
                 <textarea
                   value={participantFormData.reason}
@@ -1103,7 +1105,7 @@ export const AdminPage: React.FC = () => {
                     handleParticipantFormChange("reason", e.target.value)
                   }
                   className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 h-20 resize-none"
-                  placeholder="Enter reason (optional)"
+                  placeholder="Điền note (người trả tiền trước)"
                 />
               </div>
 
