@@ -236,10 +236,10 @@ export const AdminPage: React.FC = () => {
           }));
 
       // console.log("Selected participants:", selectedParticipantsData);
-      if (selectedParticipantsData.length === 0) {
-        setUpdateError("Please select at least one participant");
-        return;
-      }
+      // if (selectedParticipantsData.length === 0) {
+      //   setUpdateError("Please select at least one participant");
+      //   return;
+      // }
 
       const result = await dispatch(
         updateCategory({
@@ -439,6 +439,12 @@ export const AdminPage: React.FC = () => {
     }
     dispatch(storeCategoryUpDe(categoryId));
   };
+
+  useEffect(() => {
+    if (editCategory) {
+      dispatch(fetchParticipantsByCategory(editCategory._id));
+    }
+  }, [editCategory]);
 
   const handleLogout = () => {
     if (!isAuthenticated) {
@@ -782,141 +788,168 @@ export const AdminPage: React.FC = () => {
                   <>
                     <hr className="mt-4 -mx-2.5 border-gray-300" />
                     <div className="mt-5 mb-1 ml-1">
-                      <h4 className="text-md font-primaryMedium mb-4 text-black flex">
-                        <UserGroupIcon size={25} className="mr-1.5 -mt-0.5" />{" "}
-                        Participants:
-                      </h4>
                       {participants[category._id]?.length ? (
-                        <ul className="list-disc pl-0 font-primaryRegular space-y-4 ml-2">
-                          {participants[category._id].map(
-                            (participant: Participant, index) => (
-                              <li
-                                key={participant._id}
-                                className="text-sm flex justify-between"
-                              >
-                                <span className="w-3/4">
-                                  <p className="pb-1 font-primaryBold">
-                                    <span className="mr-1">{index + 1}.</span>
-                                    {participant.name}{" "}
-                                    {participant.paymentDone && (
-                                      <span className="text-green-600">
-                                        (Done)
-                                      </span>
-                                    )}
-                                  </p>
-                                  <table className="w-full ml-4">
-                                    <tbody>
-                                      <tr>
-                                        <td className="py-1 w-24 font-primaryRegula flex items-start">
-                                          - Share:
-                                        </td>
-                                        <td className="py-1 text-left font-primaryRegular">
-                                          {participant.shareAmount}k
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <td className="py-1 w-24 font-primaryRegular flex items-start">
-                                          - Paid:
-                                        </td>
-                                        <td className="py-1 text-left font-primaryRegular">
-                                          {participant.paymentBefore}k
-                                        </td>
-                                      </tr>
-                                      {participant.otherAmount !== 0 && (
+                        <>
+                          <h4 className="text-md font-primaryMedium mb-4 text-black flex">
+                            <UserGroupIcon
+                              size={25}
+                              className="mr-1.5 -mt-0.5"
+                            />{" "}
+                            Participants:
+                          </h4>
+                          <ul className="list-disc pl-0 font-primaryRegular space-y-4 ml-2">
+                            {participants[category._id].map(
+                              (participant: Participant, index) => (
+                                <li
+                                  key={participant._id}
+                                  className="text-sm flex justify-between"
+                                >
+                                  <span className="w-3/4">
+                                    <p className="pb-1 font-primaryBold">
+                                      <span className="mr-1">{index + 1}.</span>
+                                      {participant.name}{" "}
+                                      {participant.paymentDone && (
+                                        <span className="text-green-600">
+                                          (Done)
+                                        </span>
+                                      )}
+                                    </p>
+                                    <table className="w-full ml-4">
+                                      <tbody>
                                         <tr>
-                                          <td className="py-1 w-24 font-primaryRegular flex items-start">
-                                            - Other:
+                                          <td className="py-1 w-24 font-primaryRegula flex items-start">
+                                            - Share:
                                           </td>
                                           <td className="py-1 text-left font-primaryRegular">
-                                            {participant.otherAmount < 0
-                                              ? `Nhận lại ${Math.abs(
-                                                  participant.otherAmount
-                                                )}`
-                                              : `Trả thêm ${participant.otherAmount}`}
-                                            k{" "}
-                                            {participant.reasonOtherAmount !==
-                                              "" && (
-                                              <span>
-                                                ({participant.reasonOtherAmount}
-                                                )
-                                              </span>
-                                            )}
+                                            {participant.shareAmount}k
                                           </td>
                                         </tr>
-                                      )}
-                                      <tr>
-                                        <td className="py-1 w-24 font-primaryMedium ">
-                                          - Remaining:
-                                        </td>
-                                        <td className="py-1 text-left font-primaryMedium">
-                                          {participant.paidAmount === 0
-                                            ? `${participant.paidAmount}k`
-                                            : participant.paidAmount < 0
-                                            ? `Nhận lại ${Math.abs(
-                                                participant.paidAmount
-                                              )}k`
-                                            : `Trả thêm ${participant.paidAmount}k`}
-                                        </td>
-                                      </tr>
-                                    </tbody>
-                                  </table>
-                                </span>
-                                <div className="hidden sm:flex mr-2">
-                                  <button
-                                    onClick={() =>
-                                      handleEditParticipant(
-                                        participant,
-                                        category._id
-                                      )
-                                    }
-                                    className="w-10 h-7 text-yellow-600 hover:text-yellow-700 font-primaryBold rounded-lg text-md py-1"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      setDeleteParticipantInfo({
-                                        participantId: participant._id,
-                                        categoryId: category._id,
-                                      })
-                                    }
-                                    className="w-10 h-7 text-red-500 hover:text-red-600 font-primaryBold rounded-lg text-md py-1 ml-2 sm:pl-0"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                                <div className="flex sm:hidden mr-2">
-                                  <button
-                                    onClick={() =>
-                                      handleEditParticipant(
-                                        participant,
-                                        category._id
-                                      )
-                                    }
-                                    className="w-7 h-7 text-yellow-600 hover:text-yellow-700 focus:ring-2 focus:ring-gray-300 rounded-lg text-md py-1 px-1 flex justify-end"
-                                  >
-                                    <Edit02Icon size={18} />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      setDeleteParticipantInfo({
-                                        participantId: participant._id,
-                                        categoryId: category._id,
-                                      })
-                                    }
-                                    className="w-7 h-7 text-red-500 hover:text-red-600 focus:ring-2 focus:ring-gray-300 rounded-lg text-md py-1 px-1 ml-1 flex justify-end"
-                                  >
-                                    <Delete02Icon size={18} />
-                                  </button>
-                                </div>
-                              </li>
-                            )
-                          )}
-                        </ul>
+                                        <tr>
+                                          <td className="py-1 w-24 font-primaryRegular flex items-start">
+                                            - Paid:
+                                          </td>
+                                          <td className="py-1 text-left font-primaryRegular">
+                                            {participant.paymentBefore}k
+                                          </td>
+                                        </tr>
+                                        {participant.otherAmount !== 0 && (
+                                          <tr>
+                                            <td className="py-1 w-24 font-primaryRegular flex items-start">
+                                              - Other:
+                                            </td>
+                                            <td className="py-1 text-left font-primaryRegular">
+                                              {participant.otherAmount < 0
+                                                ? `Nhận lại ${Math.abs(
+                                                    participant.otherAmount
+                                                  )}`
+                                                : `Trả thêm ${participant.otherAmount}`}
+                                              k{" "}
+                                              {participant.reasonOtherAmount !==
+                                                "" && (
+                                                <span>
+                                                  (
+                                                  {
+                                                    participant.reasonOtherAmount
+                                                  }
+                                                  )
+                                                </span>
+                                              )}
+                                            </td>
+                                          </tr>
+                                        )}
+                                        <tr>
+                                          <td className="py-1 w-24 font-primaryMedium ">
+                                            - Remaining:
+                                          </td>
+                                          <td className="py-1 text-left font-primaryMedium">
+                                            {participant.paidAmount === 0
+                                              ? `${participant.paidAmount}k`
+                                              : participant.paidAmount < 0
+                                              ? `Nhận lại ${Math.abs(
+                                                  participant.paidAmount
+                                                )}k`
+                                              : `Trả thêm ${participant.paidAmount}k`}
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </span>
+                                  <div className="hidden sm:flex mr-2">
+                                    <button
+                                      onClick={() =>
+                                        handleEditParticipant(
+                                          participant,
+                                          category._id
+                                        )
+                                      }
+                                      className="w-10 h-7 text-yellow-600 hover:text-yellow-700 font-primaryBold rounded-lg text-md py-1"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        setDeleteParticipantInfo({
+                                          participantId: participant._id,
+                                          categoryId: category._id,
+                                        })
+                                      }
+                                      className="w-10 h-7 text-red-500 hover:text-red-600 font-primaryBold rounded-lg text-md py-1 ml-2 sm:pl-0"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                  <div className="flex sm:hidden mr-2">
+                                    <button
+                                      onClick={() =>
+                                        handleEditParticipant(
+                                          participant,
+                                          category._id
+                                        )
+                                      }
+                                      className="w-7 h-7 text-yellow-600 hover:text-yellow-700 focus:ring-2 focus:ring-gray-300 rounded-lg text-md py-1 px-1 flex justify-end"
+                                    >
+                                      <Edit02Icon size={18} />
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        setDeleteParticipantInfo({
+                                          participantId: participant._id,
+                                          categoryId: category._id,
+                                        })
+                                      }
+                                      className="w-7 h-7 text-red-500 hover:text-red-600 focus:ring-2 focus:ring-gray-300 rounded-lg text-md py-1 px-1 ml-1 flex justify-end"
+                                    >
+                                      <Delete02Icon size={18} />
+                                    </button>
+                                  </div>
+                                </li>
+                              )
+                            )}
+                          </ul>
+                        </>
                       ) : (
-                        <p className="text-sm text-gray-600 font-primaryRegular">
-                          No participants
-                        </p>
+                        <div className="flex items-center justify-center p-8  rounded-lg mr-0.5">
+                          <div className="text-center">
+                            <div className="text-gray-400 mb-2">
+                              <svg
+                                className="w-12 h-12 mx-auto"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                />
+                              </svg>
+                            </div>
+                            <p className="text-sm text-gray-600 font-primaryRegular">
+                              No participants found
+                            </p>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </>
@@ -949,12 +982,42 @@ export const AdminPage: React.FC = () => {
                 </span>
               </label>
               {/* Participants List */}
-              {participants[editCategory._id] &&
-                participants[editCategory._id].length > 0 && (
-                  <div className="mb-6">
-                    <p className="text-md font-primaryMedium mb-2">
-                      List participants:
-                    </p>
+              {editCategory && (
+                <div className="mb-6">
+                  <p className="text-md font-primaryMedium mb-2">
+                    List participants:
+                  </p>
+                  {!participants[editCategory._id] ? (
+                    // Loading state - when participants data is not loaded yet
+                    <div className="flex items-center justify-center p-8">
+                      <Loading size="lg" />
+                    </div>
+                  ) : participants[editCategory._id].length === 0 ? (
+                    // No participants found
+                    <div className="flex items-center justify-center p-8 bg-gray-50 rounded-lg">
+                      <div className="text-center">
+                        <div className="text-gray-400 mb-2">
+                          <svg
+                            className="w-12 h-12 mx-auto"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-sm text-gray-600 font-primaryRegular">
+                          No participants found
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    // Show participants list
                     <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
                       {participants[editCategory._id].map((participant) => (
                         <div
@@ -1013,8 +1076,9 @@ export const AdminPage: React.FC = () => {
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+              )}
               {updateError && (
                 <p className="text-red-400 text-sm mb-4">{updateError}</p>
               )}
