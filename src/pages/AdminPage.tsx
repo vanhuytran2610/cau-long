@@ -99,7 +99,7 @@ export const AdminPage: React.FC = () => {
   const [participantUpdateError, setParticipantUpdateError] = useState<
     string | null
   >(null);
-  const [currentCategoryId, setCurrentCategoryId] = useState<string>('');
+  const [currentCategoryId, setCurrentCategoryId] = useState<string>("");
 
   // Helper function to check authentication before dispatch
   const checkAuthAndDispatch = (callback: () => void) => {
@@ -266,6 +266,27 @@ export const AdminPage: React.FC = () => {
       addToast(errorMsg, "error");
     }
   };
+
+  useEffect(() => {
+    if (editCategory && participants[editCategory._id]) {
+      const initialSelectedParticipants: {
+        [key: string]: SelectedParticipant;
+      } = {};
+
+      participants[editCategory._id].forEach((participant) => {
+        const hasPaymentBefore = Boolean(
+          participant.paymentBefore && participant.paymentBefore > 0
+        );
+
+        initialSelectedParticipants[participant._id] = {
+          selected: hasPaymentBefore, // Auto-select if has paymentBefore > 0
+          amount: participant.paymentBefore || 0,
+        };
+      });
+
+      setSelectedParticipants(initialSelectedParticipants);
+    }
+  }, [editCategory, participants]);
 
   const handleDeleteCategory = (id: string) => {
     checkAuthAndDispatch(() => {
@@ -559,18 +580,23 @@ export const AdminPage: React.FC = () => {
     setSelectedParticipants((prev) => {
       // Get the participant's paymentBefore value
       let defaultAmount = 0;
+      let shouldAutoCheck = false;
+
       if (editCategory) {
         const participant = participants[editCategory._id]?.find(
           (p) => p._id === participantId
         );
         defaultAmount = participant?.paymentBefore || 0;
+        // Auto-check if participant has paymentBefore > 0
+        shouldAutoCheck = !!(
+          participant?.paymentBefore && participant.paymentBefore > 0
+        );
       }
 
       return {
         ...prev,
         [participantId]: {
-          selected: isChecked,
-          // If participant already exists in state, keep their amount, otherwise use paymentBefore
+          selected: isChecked || shouldAutoCheck,
           amount: prev[participantId]
             ? prev[participantId].amount
             : defaultAmount,
