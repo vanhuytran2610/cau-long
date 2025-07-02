@@ -119,8 +119,16 @@ const userSlice = createSlice({
         getSelectedCategory.fulfilled,
         (state, action: PayloadAction<GetSelectedCategoryResponse>) => {
           state.loadingCategory = false;
-          state.categoryId = action.payload.data._id;
-          state.categoryName = action.payload.data.name;
+
+          // Check if data exists before accessing its properties
+          if (action.payload.data) {
+            state.categoryId = action.payload.data._id;
+            state.categoryName = action.payload.data.name;
+          } else {
+            // Handle the case where data is null (No category selected)
+            state.categoryId = null;
+            state.categoryName = null;
+          }
         }
       )
       .addCase(getSelectedCategory.rejected, (state) => {
