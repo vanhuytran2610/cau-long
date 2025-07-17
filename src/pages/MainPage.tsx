@@ -32,8 +32,10 @@ export const MainPage: React.FC = () => {
   };
 
   useEffect(() => {
-    document.title = "CLB Quảng Đà";
-  }, []);
+    if (categoryName) {
+      document.title = `Cầu lông ${categoryName}`;
+    }
+  }, [categoryName]);
 
   const caseComponent = () => {
     switch (currentComponent) {

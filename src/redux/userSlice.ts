@@ -124,6 +124,7 @@ const userSlice = createSlice({
           if (action.payload.data) {
             state.categoryId = action.payload.data._id;
             state.categoryName = action.payload.data.name;
+            localStorage.setItem("categoryName", state.categoryName as string)
           } else {
             // Handle the case where data is null (No category selected)
             state.categoryId = null;

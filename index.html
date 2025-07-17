@@ -1,13 +1,23 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./src/assets/images/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CLB Quảng Đà</title>
+    <title>Cầu lông</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Wait for DOM to load
+      document.addEventListener("DOMContentLoaded", function () {
+        const categoryName = localStorage.getItem("categoryName");
+
+        if (categoryName) {
+          document.title = `Cầu lông ${categoryName}`;
+        }
+      });
+    </script>
   </body>
 </html>
