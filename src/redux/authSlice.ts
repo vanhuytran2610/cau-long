@@ -174,7 +174,7 @@ const authSlice = createSlice({
         }
       )
       .addCase(login.rejected, (state, action) => {
-        state.logoutLoading = false;
+        state.loading = false;
         state.error = action.payload as string;
         // Clear any existing auth data on login failure
         removeAuthFromStorage();

@@ -129,10 +129,16 @@ interface UpdateParticipantResponse {
   data: IUpdateParticipantResponse;
 }
 
+interface IDeleteParticipantResponse {
+  message: string;
+  deletedParticipant: Participant;
+  expenses: IExpense
+}
+
 interface DeleteParticipantResponse {
   statusCode: number;
   message: string;
-  data: Participant;
+  data: IDeleteParticipantResponse;
 }
 
 const initialState: CategoryState = {
@@ -427,11 +433,11 @@ const categorySlice = createSlice({
         deleteParticipant.fulfilled,
         (state, action: PayloadAction<DeleteParticipantResponse>) => {
           state.participantsLoading = false;
-          const categoryId = action.payload.data.category._id;
+          const categoryId = action.payload.data.deletedParticipant.category._id;
           if (state.participants[categoryId]) {
             state.participants[categoryId] = state.participants[
               categoryId
-            ].filter((p) => p._id !== action.payload.data._id);
+            ].filter((p) => p._id !== action.payload.data.deletedParticipant._id);
           }
         }
       )

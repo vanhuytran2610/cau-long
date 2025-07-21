@@ -460,8 +460,6 @@ export const AdminPage: React.FC = () => {
     document.title = "Management";
   }, []);
 
-  console.log(deleteParticipantError);
-
   // Show auth modal if not authenticated
   if (isAuthenticated === false) {
     return (
