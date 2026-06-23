@@ -1,55 +1,24 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { API_URL } from "../constants";
-import type { Category } from "./categorySlice";
+import { API_URL } from "../helpers/constants";
 import type { RootState } from "./store";
-
-interface UserState {
-  username: string | null;
-  status: "tham gia" | "lần sau" | null;
-  categoryName: string | null;
-  categoryId: string | null;
-  error: string | null;
-  loading: boolean;
-  loadingCategory: boolean;
-  message: string | null;
-}
-
-interface SubmitUserPayload {
-  name: string;
-  status: "tham gia" | "lần sau";
-  categoryId: string;
-}
-
-interface SubmitUserResponse {
-  statusCode: number;
-  message: string;
-  data: {
-    name: string;
-    status: "tham gia" | "lần sau";
-    category: string;
-    _id: string;
-    __v: number;
-  };
-}
+import type { FetchUserCategoriesResponse, GetSelectedCategoryResponse, SubmitUserPayload, SubmitUserResponse, UserState } from "../helpers/UserInterface";
 
 const initialState: UserState = {
   username: null,
   status: null,
   categoryName: null,
   categoryId: null,
+  quantity: 1,
   error: null,
   loading: false,
   loadingCategory: false,
   message: null,
+  userCategories: [],
+  userCategoriesLoading: false,
+  userCategoriesError: null,
 };
-
-export interface GetSelectedCategoryResponse {
-  statusCode: number;
-  message: string;
-  data: Category;
-}
 
 export const submitUser = createAsyncThunk<
   SubmitUserResponse,
@@ -61,6 +30,20 @@ export const submitUser = createAsyncThunk<
   } catch (error: any) {
     return rejectWithValue(
       error.response?.data?.message || "Submission failed"
+    );
+  }
+});
+
+export const fetchUserCategories = createAsyncThunk<
+  FetchUserCategoriesResponse,
+  void
+>("user/fetchUserCategories", async (_, { rejectWithValue }) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/user/categories`);
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to fetch categories"
     );
   }
 });
@@ -105,6 +88,7 @@ const userSlice = createSlice({
           state.username = action.payload.data.name;
           state.status = action.payload.data.status;
           state.categoryId = action.payload.data.category;
+          state.quantity = action.payload.data.quantity;
           state.message = action.payload.message;
         }
       )
@@ -134,6 +118,18 @@ const userSlice = createSlice({
       )
       .addCase(getSelectedCategory.rejected, (state) => {
         state.loadingCategory = false;
+      })
+      .addCase(fetchUserCategories.pending, (state) => {
+        state.userCategoriesLoading = true;
+        state.userCategoriesError = null;
+      })
+      .addCase(fetchUserCategories.fulfilled, (state, action: PayloadAction<FetchUserCategoriesResponse>) => {
+        state.userCategoriesLoading = false;
+        state.userCategories = action.payload.data;
+      })
+      .addCase(fetchUserCategories.rejected, (state, action) => {
+        state.userCategoriesLoading = false;
+        state.userCategoriesError = action.payload as string;
       });
   },
 });

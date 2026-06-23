@@ -2,144 +2,9 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import type { RootState } from "./store";
-import { API_URL } from "../constants";
+import { API_URL, CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from "../helpers/constants";
 import { removeAuthFromStorage } from "./authSlice";
-
-export interface Category {
-  _id: string;
-  name: string;
-  is_selected: boolean;
-  isCalculated: boolean;
-  __v: number;
-}
-
-export interface Participant {
-  _id: string;
-  name: string;
-  status: "tham gia" | "lần sau";
-  category: Category;
-  paymentBefore: number;
-  paymentDone: boolean;
-  paidAmount: number;
-  shareAmount: number;
-  otherAmount: number;
-  reasonOtherAmount: string;
-  __v: number;
-}
-
-interface CategoryState {
-  categories: Category[];
-  participants: { [categoryId: string]: Participant[] };
-  loading: boolean;
-  error: string | null;
-  createdLoading: boolean;
-  participantsLoading: boolean;
-  categoryUpDe: string;
-}
-
-interface CreateCategoryPayload {
-  name: string;
-}
-
-export interface UpdateCategoryPaymentPayload {
-  id: string;
-  amount: number;
-}
-
-interface UpdateCategoryPayload {
-  id: string;
-  name: string;
-  is_selected: boolean;
-  payments: UpdateCategoryPaymentPayload[];
-}
-
-interface CreateCategoryResponse {
-  statusCode: number;
-  message: string;
-  data: Category;
-}
-
-interface IResultPayment {
-  id: string;
-  name: string;
-  paymentBefore: number;
-  shareAmount: number;
-  paidAmount: number;
-}
-
-interface IExpense {
-  totalPaid: number;
-  sharePerPerson: number;
-  results: IResultPayment[];
-}
-
-interface IUpdateCategoryResponse {
-  category: Category;
-  expenses: IExpense;
-}
-
-interface UpdateCategoryResponse {
-  statusCode: number;
-  message: string;
-  data: IUpdateCategoryResponse;
-}
-
-export interface ListCategoriesResponse {
-  statusCode: number;
-  message: string;
-  data: Category[];
-}
-
-interface IListParticipantsResponse {
-  category: Category;
-  participants: Participant[];
-}
-
-interface ListParticipantsResponse {
-  statusCode: number;
-  message: string;
-  data: IListParticipantsResponse;
-}
-
-interface UpdateParticipantPayload {
-  categoryId: string;
-  participantId: string;
-  paymentDone: boolean;
-  otherAmount: number;
-  reason: string;
-}
-
-interface IUpdateParticipantResponse {
-  _id: string;
-  name: string;
-  status: string;
-  category: Category;
-  __v: number;
-  paymentBefore: number;
-  shareAmount: number;
-  paidAmount: number;
-  paymentDone: boolean;
-  otherAmount: number;
-  reasonOtherAmount: string;
-}
-
-interface UpdateParticipantResponse {
-  statusCode: number;
-  message: string;
-  data: IUpdateParticipantResponse;
-}
-
-interface IDeleteParticipantResponse {
-  message: string;
-  deletedParticipant: Participant;
-  expenses: IExpense
-}
-
-interface DeleteParticipantResponse {
-  statusCode: number;
-  message: string;
-  data: IDeleteParticipantResponse;
-}
+import type { CalculateCategoryPayload, CalculateCategoryResponse, CategoryState, CreateCategoryPayload, CreateCategoryResponse, DeleteParticipantResponse, ExportCategoryPayload, ExportCategoryResponse, ListCategoriesResponse, ListParticipantsResponse, UpdateCategoryPayload, UpdateCategoryResponse, UpdateParticipantPayload, UpdateParticipantResponse, UploadQrResponse } from "../helpers/CategoryInterface";
 
 const initialState: CategoryState = {
   categories: [],
@@ -149,6 +14,10 @@ const initialState: CategoryState = {
   createdLoading: false,
   participantsLoading: false,
   categoryUpDe: "",
+  calculateLoading: false,
+  exportLoading: false,
+  uploadQrLoading: false,
+  deleteCategoryError: null,
 };
 
 export const createCategory = createAsyncThunk<
@@ -181,7 +50,6 @@ export const updateCategory = createAsyncThunk<
       {
         name: payload.name,
         is_selected: payload.is_selected,
-        payments: payload.payments,
       },
       {
         headers: { Authorization: `Bearer ${auth.token}` },
@@ -266,11 +134,7 @@ export const updateParticipant = createAsyncThunk<
     try {
       const response = await axios.put(
         `${API_URL}/api/participants/${payload.categoryId}/${payload.participantId}`,
-        {
-          paymentDone: payload.paymentDone,
-          otherAmount: payload.otherAmount,
-          reason: payload.reason
-        },
+        { isPaid: payload.isPaid },
         {
           headers: { Authorization: `Bearer ${auth.token}` },
         }
@@ -303,6 +167,75 @@ export const deleteParticipant = createAsyncThunk<
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to delete participant"
+      );
+    }
+  }
+);
+
+export const calculateCategory = createAsyncThunk<
+  CalculateCategoryResponse,
+  CalculateCategoryPayload,
+  { state: RootState }
+>(
+  "category/calculateCategory",
+  async (payload, { getState, rejectWithValue }) => {
+    const { auth } = getState() as { auth: { token: string | null } };
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/categories/${payload.id}/calculate`,
+        { paymentInfo: payload.paymentInfo },
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to calculate expenses"
+      );
+    }
+  }
+);
+
+export const exportCategory = createAsyncThunk<
+  ExportCategoryResponse,
+  ExportCategoryPayload,
+  { state: RootState }
+>(
+  "category/exportCategory",
+  async (payload, { getState, rejectWithValue }) => {
+    const { auth } = getState() as { auth: { token: string | null } };
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/categories/${payload.id}/export`,
+        { qr_img_url: payload.qr_img_url, qr_img_name: payload.qr_img_name },
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to export category"
+      );
+    }
+  }
+);
+
+export const uploadQrImage = createAsyncThunk<
+  UploadQrResponse,
+  File
+>(
+  "category/uploadQrImage",
+  async (file, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formData
+      );
+      return response.data as UploadQrResponse;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.error?.message || "Failed to upload image"
       );
     }
   }
@@ -345,10 +278,10 @@ const categorySlice = createSlice({
         (state, action: PayloadAction<UpdateCategoryResponse>) => {
           state.loading = false;
           const index = state.categories.findIndex(
-            (cat) => cat._id === action.payload.data.category._id
+            (cat) => cat._id === action.payload.data._id
           );
           if (index !== -1) {
-            state.categories[index] = action.payload.data.category;
+            state.categories[index] = action.payload.data;
           }
         }
       )
@@ -358,21 +291,21 @@ const categorySlice = createSlice({
       })
       .addCase(deleteCategory.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.deleteCategoryError = null;
       })
       .addCase(
         deleteCategory.fulfilled,
         (state, action: PayloadAction<UpdateCategoryResponse>) => {
           state.loading = false;
           state.categories = state.categories.filter(
-            (cat) => cat._id !== action.payload.data.category._id
+            (cat) => cat._id !== action.payload.data._id
           );
-          delete state.participants[action.payload.data.category._id];
+          delete state.participants[action.payload.data._id];
         }
       )
       .addCase(deleteCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.deleteCategoryError = action.payload as string;
       })
       .addCase(fetchCategories.pending, (state) => {
         state.loading = true;
@@ -415,9 +348,12 @@ const categorySlice = createSlice({
           state.participantsLoading = false;
           const categoryId = action.payload.data.category._id;
           if (state.participants[categoryId]) {
-            state.participants[categoryId] = state.participants[
-              categoryId
-            ].filter((p) => p._id !== action.payload.data._id);
+            const index = state.participants[categoryId].findIndex(
+              (p) => p._id === action.payload.data._id
+            );
+            if (index !== -1) {
+              state.participants[categoryId][index] = action.payload.data;
+            }
           }
         }
       )
@@ -431,18 +367,63 @@ const categorySlice = createSlice({
       })
       .addCase(
         deleteParticipant.fulfilled,
-        (state, action: PayloadAction<DeleteParticipantResponse>) => {
+        (state, action) => {
           state.participantsLoading = false;
-          const categoryId = action.payload.data.deletedParticipant.category._id;
+          const { categoryId, participantId } = action.meta.arg;
           if (state.participants[categoryId]) {
-            state.participants[categoryId] = state.participants[
-              categoryId
-            ].filter((p) => p._id !== action.payload.data.deletedParticipant._id);
+            state.participants[categoryId] = state.participants[categoryId].filter(
+              (p) => p._id !== participantId
+            );
           }
         }
       )
       .addCase(deleteParticipant.rejected, (state, action) => {
         state.participantsLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(calculateCategory.pending, (state) => {
+        state.calculateLoading = true;
+        state.error = null;
+      })
+      .addCase(calculateCategory.fulfilled, (state, action: PayloadAction<CalculateCategoryResponse>) => {
+        state.calculateLoading = false;
+        const index = state.categories.findIndex(
+          (cat) => cat._id === action.payload.data.category._id
+        );
+        if (index !== -1) {
+          state.categories[index] = action.payload.data.category;
+        }
+      })
+      .addCase(calculateCategory.rejected, (state, action) => {
+        state.calculateLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(exportCategory.pending, (state) => {
+        state.exportLoading = true;
+        state.error = null;
+      })
+      .addCase(exportCategory.fulfilled, (state, action: PayloadAction<ExportCategoryResponse>) => {
+        state.exportLoading = false;
+        const index = state.categories.findIndex(
+          (cat) => cat._id === action.payload.data._id
+        );
+        if (index !== -1) {
+          state.categories[index] = action.payload.data;
+        }
+      })
+      .addCase(exportCategory.rejected, (state, action) => {
+        state.exportLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(uploadQrImage.pending, (state) => {
+        state.uploadQrLoading = true;
+        state.error = null;
+      })
+      .addCase(uploadQrImage.fulfilled, (state) => {
+        state.uploadQrLoading = false;
+      })
+      .addCase(uploadQrImage.rejected, (state, action) => {
+        state.uploadQrLoading = false;
         state.error = action.payload as string;
       });
   },

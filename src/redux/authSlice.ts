@@ -2,36 +2,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import type { RootState } from "./store";
-import { API_URL } from "../constants";
+import { API_URL } from "../helpers/constants";
+import type { AuthState, LoginCredentials, LoginResponse, LogoutResponse } from "../helpers/AuthInterface";
 
-interface AuthState {
-  isAuthenticated: boolean;
-  username: string | null;
-  token: string | null;
-  error: string | null;
-  loading: boolean;
-  logoutLoading: boolean;
-  checkAuthLoading: boolean;
-}
 
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-interface LoginResponse {
-  statusCode: number;
-  message: string;
-  data: {
-    username: string;
-    token: string;
-  };
-}
-
-interface LogoutResponse {
-  statusCode: number;
-  message: string;
-}
 
 // Helper functions for localStorage
 const saveAuthToStorage = (

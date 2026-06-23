@@ -3,6 +3,7 @@ import App from "../App";
 import { MainPage } from "../pages/MainPage";
 import { LoginPage } from "../pages/LoginPage";
 import { AdminPage } from "../pages/AdminPage";
+import { UserExpensePage } from "../pages/UserExpensePage";
 import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
 
@@ -33,6 +34,10 @@ const routes = [
       {
         path: "login-to-ql-page-110",
         element: <LoginPage />,
+      },
+      {
+        path: "money",
+        element: <UserExpensePage />,
       },
       {
         path: "admin-ql-nnh-110-page",

@@ -9,35 +9,28 @@ import {
   clearCategoryError,
   deleteParticipant,
   storeCategoryUpDe,
-  type Participant,
-  type Category,
-  type UpdateCategoryPaymentPayload,
   updateParticipant,
+  calculateCategory,
+  exportCategory,
+  uploadQrImage,
 } from "../redux/categorySlice";
 import { logout } from "../redux/authSlice"; // Assuming checkAuth action is added
 import { useAppDispatch, type RootState } from "../redux/store";
 import Loading from "../components/Loading";
-import { Delete02Icon, Edit02Icon, UserGroupIcon } from "hugeicons-react";
+import {
+  Delete02Icon,
+  Edit02Icon,
+  InformationDiamondIcon,
+  QrCode01Icon,
+  CheckmarkCircle03Icon,
+} from "hugeicons-react";
+import type { Category, Participant } from "../helpers/CategoryInterface";
+import ChatBot from "../components/ChatBot";
 
 interface Toast {
   id: string;
   message: string;
   type: "success" | "error" | "info" | "warning";
-}
-
-interface SelectedParticipant {
-  selected: boolean;
-  amount: number;
-}
-
-interface SelectedParticipants {
-  [participantId: string]: SelectedParticipant;
-}
-
-interface EditParticipantData {
-  paymentDone: boolean;
-  otherAmount: number;
-  reason: string;
 }
 
 // interface EditParticipantModalProps {
@@ -47,14 +40,14 @@ interface EditParticipantData {
 //   onUpdate: (
 //     categoryId: string,
 //     participantId: string,
-//     data: EditParticipantData
+//     isPaid: boolean
 //   ) => Promise<void>;
 // }
 
 export const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { username, logoutLoading, isAuthenticated } = useSelector(
-    (state: RootState) => state.auth
+    (state: RootState) => state.auth,
   );
   const {
     categories,
@@ -64,9 +57,12 @@ export const AdminPage: React.FC = () => {
     createdLoading,
     participantsLoading,
     categoryUpDe,
+    calculateLoading,
+    exportLoading,
+    uploadQrLoading,
+    deleteCategoryError,
   } = useSelector((state: RootState) => state.category);
 
-  // Existing state
   const [newCategoryName, setNewCategoryName] = useState("");
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
@@ -81,25 +77,26 @@ export const AdminPage: React.FC = () => {
   const [deleteParticipantError, setDeleteParticipantError] = useState<
     string | null
   >(null);
-  // New state for toast and auth modal
+  const [deleteCategoryErr, setDeleteCategoryErr] = useState<string | null>(
+    null,
+  );
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [selectedParticipants, setSelectedParticipants] =
-    useState<SelectedParticipants>({});
-  // State for edit participant modal
-  const [editParticipant, setEditParticipant] = useState<Participant | null>(
-    null
+  // Per-category inline calculate/export state
+  const [paymentInfoMap, setPaymentInfoMap] = useState<{
+    [id: string]: string;
+  }>({});
+  const [qrPreviewMap, setQrPreviewMap] = useState<{ [id: string]: string }>(
+    {},
   );
-  const [participantFormData, setParticipantFormData] =
-    useState<EditParticipantData>({
-      paymentDone: false,
-      otherAmount: 0,
-      reason: "",
-    });
-  const [participantUpdateError, setParticipantUpdateError] = useState<
-    string | null
-  >(null);
-  const [currentCategoryId, setCurrentCategoryId] = useState<string>("");
+  const [qrNameMap, setQrNameMap] = useState<{ [id: string]: string }>({});
+  const [qrFileMap, setQrFileMap] = useState<{ [id: string]: File }>({});
+  const [calculateErrorMap, setCalculateErrorMap] = useState<{
+    [id: string]: string | null;
+  }>({});
+  const [exportErrorMap, setExportErrorMap] = useState<{
+    [id: string]: string | null;
+  }>({});
 
   // Helper function to check authentication before dispatch
   const checkAuthAndDispatch = (callback: () => void) => {
@@ -191,11 +188,13 @@ export const AdminPage: React.FC = () => {
       return;
     }
 
+    console.log(error);
+
     if (newCategoryName.trim()) {
       dispatch(clearCategoryError());
       try {
         const result = await dispatch(
-          createCategory({ name: newCategoryName })
+          createCategory({ name: newCategoryName }),
         );
         if (createCategory.fulfilled.match(result)) {
           setEditCategory(null);
@@ -226,28 +225,12 @@ export const AdminPage: React.FC = () => {
     setUpdateError(null);
 
     try {
-      // Get selected participants data
-      const selectedParticipantsData: UpdateCategoryPaymentPayload[] =
-        Object.entries(selectedParticipants)
-          .filter(([_, data]: [string, SelectedParticipant]) => data.selected)
-          .map(([participantId, data]: [string, SelectedParticipant]) => ({
-            id: participantId,
-            amount: data.amount,
-          }));
-
-      // console.log("Selected participants:", selectedParticipantsData);
-      // if (selectedParticipantsData.length === 0) {
-      //   setUpdateError("Please select at least one participant");
-      //   return;
-      // }
-
       const result = await dispatch(
         updateCategory({
           id: category._id,
           name: category.name,
           is_selected: category.is_selected,
-          payments: selectedParticipantsData,
-        })
+        }),
       );
 
       if (updateCategory.fulfilled.match(result)) {
@@ -267,122 +250,169 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (editCategory && participants[editCategory._id]) {
-      const initialSelectedParticipants: {
-        [key: string]: SelectedParticipant;
-      } = {};
-
-      participants[editCategory._id].forEach((participant) => {
-        const hasPaymentBefore = Boolean(
-          participant.paymentBefore && participant.paymentBefore > 0
-        );
-
-        initialSelectedParticipants[participant._id] = {
-          selected: hasPaymentBefore, // Auto-select if has paymentBefore > 0
-          amount: participant.paymentBefore || 0,
-        };
-      });
-
-      setSelectedParticipants(initialSelectedParticipants);
-    }
-  }, [editCategory, participants]);
-
   const handleDeleteCategory = (id: string) => {
-    checkAuthAndDispatch(() => {
-      dispatch(clearCategoryError());
-      dispatch(deleteCategory(id));
-      setDeleteCategoryId(null);
-      dispatch(fetchCategories());
-      addToast("Date deleted successfully!", "success");
-    });
-  };
-
-  // Handler to open edit participant modal
-  const handleEditParticipant = (
-    participant: Participant,
-    categoryId: string
-  ): void => {
-    setEditParticipant(participant);
-    setCurrentCategoryId(categoryId);
-    setParticipantFormData({
-      paymentDone: participant.paymentDone || false,
-      otherAmount: participant.otherAmount || 0,
-      reason: participant.reasonOtherAmount || "",
-    });
-    setParticipantUpdateError(null);
-  };
-
-  // Handler for form field changes
-  const handleParticipantFormChange = (
-    field: keyof EditParticipantData,
-    value: boolean | number | string
-  ): void => {
-    setParticipantFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleUpdateParticipant = async (): Promise<void> => {
     checkAuthAndDispatch(async () => {
       dispatch(clearCategoryError());
-      if (!editParticipant) return;
 
-      setParticipantUpdateError(null);
       try {
-        // Delete the participant
-        console.log(participantFormData.reason);
-        const result = await dispatch(
-          updateParticipant({
-            participantId: editParticipant._id,
-            categoryId: currentCategoryId,
-            paymentDone: participantFormData.paymentDone,
-            otherAmount: participantFormData.otherAmount,
-            reason: participantFormData.reason,
-          })
-        );
-
-        if (updateParticipant.fulfilled.match(result)) {
-          dispatch(storeCategoryUpDe(editParticipant.category._id));
-
-          // Fetch updated participants list for this category
-          await dispatch(
-            fetchParticipantsByCategory(editParticipant.category._id)
+        const result = await dispatch(deleteCategory(id));
+        if (deleteCategory.fulfilled.match(result)) {
+          setDeleteCategoryId(null);
+          dispatch(fetchCategories());
+          addToast("Date deleted successfully!", "success");
+        } else if (deleteCategory.rejected.match(result)) {
+          setDeleteCategoryErr(
+            deleteCategoryError ||
+              (result.payload as string) ||
+              "Failed to delete category",
           );
-
-          // Close the modal and show success message
-          setEditParticipant(null);
-          addToast("Participant updated successfully!", "success");
-        } else if (updateParticipant.rejected.match(result)) {
-          const errorMsg =
-            (result.payload as string) || "Failed to delete participant";
-          setParticipantUpdateError(errorMsg);
         }
-
-        // Store the category ID for future reference
       } catch (error: any) {
-        // Handle any errors that occur during the deletion process
-        // addToast("Failed to delete participant", "error");
-        setParticipantUpdateError(error);
-        console.error("Error deleting participant:", error);
+        setDeleteCategoryErr(error?.message || "Failed to delete category");
       }
     });
   };
 
-  const handleCloseParticipantModal = (): void => {
-    setEditParticipant(null);
-    setParticipantFormData({
-      paymentDone: false,
-      otherAmount: 0,
-      reason: "",
+  const handleToggleIsPaid = (
+    participant: Participant,
+    categoryId: string,
+    isPaid: boolean,
+  ): void => {
+    checkAuthAndDispatch(async () => {
+      dispatch(clearCategoryError());
+      try {
+        const result = await dispatch(
+          updateParticipant({
+            participantId: participant._id,
+            categoryId,
+            isPaid,
+          }),
+        );
+        if (updateParticipant.fulfilled.match(result)) {
+          dispatch(storeCategoryUpDe(categoryId));
+          addToast("Cập nhật thành công!", "success");
+        }
+      } catch (error: any) {
+        addToast("Cập nhật không thành công!", "error");
+      }
     });
-    setParticipantUpdateError(null);
+  };
+
+  const handleCalculate = async (category: Category): Promise<void> => {
+    checkAuthAndDispatch(async () => {
+      dispatch(clearCategoryError());
+      setCalculateErrorMap((prev) => ({ ...prev, [category._id]: null }));
+      try {
+        const paymentInfo =
+          paymentInfoMap[category._id] ?? category.paymentInfo;
+        const result = await dispatch(
+          calculateCategory({ id: category._id, paymentInfo }),
+        );
+        if (calculateCategory.fulfilled.match(result)) {
+          await dispatch(fetchCategories());
+          await dispatch(fetchParticipantsByCategory(category._id));
+          addToast("Tính tiền thành công!", "success");
+        } else if (calculateCategory.rejected.match(result)) {
+          setCalculateErrorMap((prev) => ({
+            ...prev,
+            [category._id]: (result.payload as string) || "Failed",
+          }));
+        }
+      } catch (error: any) {
+        setCalculateErrorMap((prev) => ({
+          ...prev,
+          [category._id]: error?.message || "Failed to calculate",
+        }));
+      }
+    });
+  };
+
+  const handleExport = async (category: Category): Promise<void> => {
+    checkAuthAndDispatch(async () => {
+      dispatch(clearCategoryError());
+      setExportErrorMap((prev) => ({ ...prev, [category._id]: null }));
+      try {
+        let qrUrl =
+          qrPreviewMap[category._id] !== undefined
+            ? qrPreviewMap[category._id]
+            : category.qr_img_url;
+
+        const localFile = qrFileMap[category._id];
+        if (localFile) {
+          const uploadResult = await dispatch(uploadQrImage(localFile));
+          if (uploadQrImage.fulfilled.match(uploadResult)) {
+            qrUrl = uploadResult.payload.secure_url;
+            setQrPreviewMap((prev) => ({ ...prev, [category._id]: qrUrl }));
+            setQrFileMap((prev) => {
+              const next = { ...prev };
+              delete next[category._id];
+              return next;
+            });
+          } else {
+            setExportErrorMap((prev) => ({
+              ...prev,
+              [category._id]:
+                (uploadResult.payload as string) || "Failed to upload QR image",
+            }));
+            return;
+          }
+        }
+
+        const result = await dispatch(
+          exportCategory({
+            id: category._id,
+            qr_img_url: qrUrl,
+            qr_img_name: qrNameMap[category._id] ?? "",
+          }),
+        );
+        if (exportCategory.fulfilled.match(result)) {
+          addToast("Show kết quả thành công!", "success");
+        } else if (exportCategory.rejected.match(result)) {
+          setExportErrorMap((prev) => ({
+            ...prev,
+            [category._id]: (result.payload as string) || "Failed",
+          }));
+        }
+      } catch (error: any) {
+        setExportErrorMap((prev) => ({
+          ...prev,
+          [category._id]: error?.message || "Failed to export",
+        }));
+      }
+    });
+  };
+
+  const handleQrFileChange = (categoryId: string, file: File | null): void => {
+    if (!file) return;
+    setQrFileMap((prev) => ({ ...prev, [categoryId]: file }));
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setQrPreviewMap((prev) => ({
+        ...prev,
+        [categoryId]: e.target?.result as string,
+      }));
+      setQrNameMap((prev) => ({ ...prev, [categoryId]: file.name }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveQr = (categoryId: string): void => {
+    setQrPreviewMap((prev) => ({ ...prev, [categoryId]: "" }));
+    setQrNameMap((prev) => {
+      const next = { ...prev };
+      delete next[categoryId];
+      return next;
+    });
+    setQrFileMap((prev) => {
+      const next = { ...prev };
+      delete next[categoryId];
+      return next;
+    });
   };
 
   const handleDeleteParticipant = async (
     participantId: string,
-    categoryId: string
+    categoryId: string,
   ) => {
     checkAuthAndDispatch(async () => {
       dispatch(clearCategoryError());
@@ -390,7 +420,7 @@ export const AdminPage: React.FC = () => {
       try {
         // Delete the participant
         const result = await dispatch(
-          deleteParticipant({ participantId, categoryId })
+          deleteParticipant({ participantId, categoryId }),
         );
 
         if (deleteParticipant.fulfilled.match(result)) {
@@ -410,9 +440,9 @@ export const AdminPage: React.FC = () => {
 
         // Store the category ID for future reference
       } catch (error: any) {
-        // Handle any errors that occur during the deletion process
-        // addToast("Failed to delete participant", "error");
-        setDeleteParticipantError(error);
+        setDeleteParticipantError(
+          error?.message || "Failed to delete participant",
+        );
         console.error("Error deleting participant:", error);
       }
     });
@@ -420,7 +450,7 @@ export const AdminPage: React.FC = () => {
 
   const toggleParticipants = async (categoryId: string) => {
     if (!isAuthenticated) {
-      addToast("Please log in to view participants", "error");
+      addToast("Hãy đăng nhập để xem thông tin người tham gia", "error");
       setShowAuthModal(true);
       return;
     }
@@ -429,42 +459,36 @@ export const AdminPage: React.FC = () => {
       setLoadingParticipants([...loadingParticipants, categoryId]);
       await dispatch(fetchParticipantsByCategory(categoryId));
       setLoadingParticipants(
-        loadingParticipants.filter((id) => id !== categoryId)
+        loadingParticipants.filter((id) => id !== categoryId),
       );
       setExpandedCategories([...expandedCategories, categoryId]);
     } else {
       setExpandedCategories(
-        expandedCategories.filter((id) => id !== categoryId)
+        expandedCategories.filter((id) => id !== categoryId),
       );
     }
     dispatch(storeCategoryUpDe(categoryId));
   };
 
-  useEffect(() => {
-    if (editCategory) {
-      dispatch(fetchParticipantsByCategory(editCategory._id));
-    }
-  }, [editCategory]);
-
   const handleLogout = () => {
     if (!isAuthenticated) {
-      addToast("You are already logged out", "info");
+      addToast("Bạn đã đăng xuất", "info");
       return;
     }
 
     dispatch(logout());
-    addToast("Logged out successfully!", "info");
+    addToast("Đã đăng xuất thành công!", "info");
   };
 
   useEffect(() => {
-    document.title = "Management";
+    document.title = "Quản lý đánh cầu";
   }, []);
 
   // Show auth modal if not authenticated
   if (isAuthenticated === false) {
     return (
       <>
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2">
+        <div className="fixed top-4 right-4 z-50 space-y-2">
           {toasts.map((toast) => (
             <div
               key={toast.id}
@@ -472,10 +496,10 @@ export const AdminPage: React.FC = () => {
                 toast.type === "success"
                   ? "bg-green-600"
                   : toast.type === "error"
-                  ? "bg-red-400"
-                  : toast.type === "warning"
-                  ? "bg-yellow-600"
-                  : "bg-gray-400"
+                    ? "bg-red-400"
+                    : toast.type === "warning"
+                      ? "bg-yellow-600"
+                      : "bg-gray-400"
               } motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-4 motion-safe:duration-300 group-[.toast-container]:motion-safe:animate-out group-[.toast-container]:motion-safe:fade-out group-[.toast-container]:motion-safe:slide-out-to-top-4`}
             >
               <span className="text-md font-primaryMedium text-black">
@@ -510,18 +534,18 @@ export const AdminPage: React.FC = () => {
                   />
                 </svg>
                 <h2 className="text-2xl font-primaryBold text-gray-900 mb-2">
-                  Authentication Required
+                  Xác thực cần thiết
                 </h2>
                 <p className="text-gray-600 font-primaryRegular">
-                  You need to be logged in to access this page. Please log in to
-                  continue.
+                  Bạn cần phải đăng nhập để truy cập trang này. Vui lòng đăng
+                  nhập để tiếp tục.
                 </p>
               </div>
               <button
                 onClick={redirectToLogin}
                 className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-primaryMedium rounded-lg text-sm px-5 py-3 transition-colors"
               >
-                Go to Login Page
+                Chuyển đến trang đăng nhập
               </button>
             </div>
           </div>
@@ -548,7 +572,7 @@ export const AdminPage: React.FC = () => {
   };
 
   const handleEditCategoryNameChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (editCategory) {
       setEditCategory({
@@ -563,7 +587,7 @@ export const AdminPage: React.FC = () => {
   };
 
   const handleEditCategorySelectedChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (editCategory) {
       setEditCategory({
@@ -577,57 +601,10 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  const handleParticipantCheckboxChange = (
-    participantId: string,
-    isChecked: boolean
-  ): void => {
-    setSelectedParticipants((prev) => {
-      // Get the participant's paymentBefore value
-      let defaultAmount = 0;
-      let shouldAutoCheck = false;
-
-      if (editCategory) {
-        const participant = participants[editCategory._id]?.find(
-          (p) => p._id === participantId
-        );
-        defaultAmount = participant?.paymentBefore || 0;
-        // Auto-check if participant has paymentBefore > 0
-        shouldAutoCheck = !!(
-          participant?.paymentBefore && participant.paymentBefore > 0
-        );
-      }
-
-      return {
-        ...prev,
-        [participantId]: {
-          selected: isChecked || shouldAutoCheck,
-          amount: prev[participantId]
-            ? prev[participantId].amount
-            : defaultAmount,
-        },
-      };
-    });
-  };
-
-  // Handler for participant amount change
-  const handleParticipantAmountChange = (
-    participantId: string,
-    amount: string
-  ): void => {
-    setSelectedParticipants((prev) => ({
-      ...prev,
-      [participantId]: {
-        ...prev[participantId],
-        selected: prev[participantId]?.selected || false,
-        amount: parseFloat(amount) || 0,
-      },
-    }));
-  };
-
   return (
     <>
       {/* Toast Container */}
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2">
+      <div className="fixed top-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
           <div
             key={toast.id}
@@ -635,10 +612,10 @@ export const AdminPage: React.FC = () => {
               toast.type === "success"
                 ? "bg-green-600"
                 : toast.type === "error"
-                ? "bg-red-400"
-                : toast.type === "warning"
-                ? "bg-yellow-600"
-                : "bg-gray-400"
+                  ? "bg-red-400"
+                  : toast.type === "warning"
+                    ? "bg-yellow-600"
+                    : "bg-gray-400"
             } motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-4 motion-safe:duration-300 group-[.toast-container]:motion-safe:animate-out group-[.toast-container]:motion-safe:fade-out group-[.toast-container]:motion-safe:slide-out-to-top-4`}
           >
             <span className="text-md font-primaryMedium text-black">
@@ -658,19 +635,19 @@ export const AdminPage: React.FC = () => {
         <div className="max-w-4xl w-full px-2 sm:px-2 md:px-4 lg:px-6 xl:px-6 2xl:px-8">
           <div className="flex justify-between items-center mb-16 pb-4 border-b-2 border-gray-500">
             <h1 className="text-3xl font-primaryBold">
-              Welcome, {username || "Admin"}
+              Hello, {username || "Admin"}
             </h1>
             <button
               onClick={handleLogout}
               className="text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
             >
-              {logoutLoading ? <Loading size="sm" /> : "Logout"}
+              {logoutLoading ? <Loading size="sm" /> : "Đăng xuất"}
             </button>
           </div>
 
           {/* Create Category Modal */}
           <div className="mb-6">
-            <h2 className="text-xl font-primaryMedium mb-2">Create New Date</h2>
+            <h2 className="text-xl font-primaryMedium mb-2">Tạo Ngày Mới</h2>
             <div className="flex space-x-4">
               <input
                 type="text"
@@ -684,9 +661,10 @@ export const AdminPage: React.FC = () => {
                 disabled={loading}
                 className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-2 py-2.5 disabled:opacity-50 flex items-center justify-center space-x-2 min-w-28"
               >
-                {createdLoading ? <Loading size="sm" /> : "Create Date"}
+                {createdLoading ? <Loading size="sm" /> : "Tạo Ngày"}
               </button>
             </div>
+            {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
           </div>
 
           {/* Error Display */}
@@ -695,7 +673,9 @@ export const AdminPage: React.FC = () => {
           )}
 
           {/* Category List */}
-          <h2 className="text-xl font-primaryMedium mb-4 mt-12">List Dates</h2>
+          <h2 className="text-xl font-primaryMedium mb-4 mt-12">
+            Danh Sách Ngày Đánh Cầu
+          </h2>
           <div className="space-y-4">
             {categories.map((category) => (
               <div
@@ -710,8 +690,8 @@ export const AdminPage: React.FC = () => {
                       className="text-black flex items-center justify-center"
                       title={
                         expandedCategories.includes(category._id)
-                          ? `Show participant`
-                          : `Hide participant`
+                          ? `Hiện thông tin chi tiết`
+                          : `Ẩn thông tin chi tiết`
                       }
                     >
                       {loadingParticipants.includes(category._id) ? (
@@ -748,7 +728,7 @@ export const AdminPage: React.FC = () => {
                             : "font-primaryRegular text-gray-600"
                         }`}
                       >
-                        Selected Date: {category.is_selected ? "Yes" : "No"}
+                        {category.is_selected ? "Ngày được chọn" : "Chưa chọn"}
                       </p>
                     </div>
                   </div>
@@ -757,13 +737,13 @@ export const AdminPage: React.FC = () => {
                       onClick={() => setEditCategory(category)}
                       className="text-black bg-yellow-400 hover:bg-yellow-500 focus:ring-2 focus:ring-yellow-300 font-primaryMedium rounded-lg text-sm px-4 py-2"
                     >
-                      Edit
+                      Sửa
                     </button>
                     <button
                       onClick={() => setDeleteCategoryId(category._id)}
                       className="text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-4 py-2"
                     >
-                      Delete
+                      Xóa
                     </button>
                   </div>
                   <div className="flex space-x-2 sm:hidden mr-0.5">
@@ -785,148 +765,271 @@ export const AdminPage: React.FC = () => {
                 {expandedCategories.includes(category._id) && (
                   <>
                     <hr className="mt-4 -mx-2.5 border-gray-300" />
-                    <div className="mt-5 mb-1 ml-1">
-                      {participants[category._id]?.length ? (
-                        <>
-                          <h4 className="text-md font-primaryMedium mb-4 text-black flex">
-                            <UserGroupIcon
-                              size={25}
-                              className="mr-1.5 -mt-0.5"
-                            />{" "}
-                            Participants:
-                          </h4>
-                          <ul className="list-disc pl-0 font-primaryRegular space-y-4 ml-2">
-                            {participants[category._id].map(
-                              (participant: Participant, index) => (
-                                <li
-                                  key={participant._id}
-                                  className="text-sm flex justify-between"
+                    {/* Calculate & Export inline section */}
+                    <div className="mt-4 pb-2 mx-1 sm:flex sm:gap-6">
+                      {/* Left: Calculate */}
+                      <div className="sm:flex-1">
+                        <p className="text-md font-primaryMedium text-black mb-2">
+                          <InformationDiamondIcon
+                            size={20}
+                            className="inline mr-1 -mt-0.5"
+                          />
+                          Thông tin buổi đánh
+                        </p>
+                        <textarea
+                          rows={3}
+                          className="mb-0 mt-4 bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5 resize-none"
+                          placeholder=""
+                          value={
+                            paymentInfoMap[category._id] ?? category.paymentInfo
+                          }
+                          onChange={(e) =>
+                            setPaymentInfoMap((prev) => ({
+                              ...prev,
+                              [category._id]: e.target.value,
+                            }))
+                          }
+                        />
+                        <p className="text-sm font-primaryRegular mt-1 text-gray-500 italic">
+                          VD: Hôm nay tiền sân là ..., tiền cầu là ... (... trái
+                          cầu, 1 trái giá ...)
+                        </p>
+                        <div className="hidden sm:block">
+                          {calculateErrorMap[category._id] && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {calculateErrorMap[category._id]}
+                            </p>
+                          )}
+                          {exportErrorMap[category._id] && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {exportErrorMap[category._id]}
+                            </p>
+                          )}
+                          <div className="flex space-x-4 mt-2">
+                            <button
+                              onClick={() => handleCalculate(category)}
+                              disabled={calculateLoading}
+                              className="mt-3 text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
+                            >
+                              {calculateLoading ? (
+                                <Loading size="sm" />
+                              ) : (
+                                "Tính tiền"
+                              )}
+                            </button>
+
+                            <button
+                              onClick={() => handleExport(category)}
+                              disabled={exportLoading || uploadQrLoading}
+                              className="mt-3 text-black bg-blue-400 hover:bg-blue-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
+                            >
+                              {uploadQrLoading ? (
+                                <Loading size="sm" />
+                              ) : exportLoading ? (
+                                <Loading size="sm" />
+                              ) : (
+                                "Show kết quả"
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Export / QR */}
+                      <div>
+                        <p className="text-md font-primaryMedium text-black mb-4 mt-4 sm:mt-0">
+                          <QrCode01Icon
+                            size={20}
+                            className="inline mr-1 -mt-0.5"
+                          />
+                          Mã QR
+                        </p>
+                        <div>
+                          {(() => {
+                            const qrSrc =
+                              qrPreviewMap[category._id] !== undefined
+                                ? qrPreviewMap[category._id]
+                                : category.qr_img_url;
+                            return qrSrc ? (
+                              <div className="relative w-48 h-52 mr-2">
+                                <img
+                                  src={qrSrc}
+                                  alt="QR"
+                                  className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveQr(category._id)}
+                                  className="absolute -top-2.5 -right-2.5 w-5 h-5 bg-gray-600 text-white rounded-full flex items-center justify-center text-sm hover:bg-gray-800 leading-none pb-1"
                                 >
-                                  <span className="w-3/4">
-                                    <p className="pb-1 font-primaryBold">
-                                      <span className="mr-1">{index + 1}.</span>
-                                      {participant.name}{" "}
-                                      {participant.paymentDone && (
-                                        <span className="text-green-600">
-                                          (Done)
-                                        </span>
-                                      )}
-                                    </p>
-                                    <table className="w-full ml-4">
-                                      <tbody>
-                                        <tr>
-                                          <td className="py-1 w-24 font-primaryRegula flex items-start">
-                                            - Share:
-                                          </td>
-                                          <td className="py-1 text-left font-primaryRegular">
-                                            {participant.shareAmount}k
-                                          </td>
-                                        </tr>
-                                        <tr>
-                                          <td className="py-1 w-24 font-primaryRegular flex items-start">
-                                            - Paid:
-                                          </td>
-                                          <td className="py-1 text-left font-primaryRegular">
-                                            {participant.paymentBefore}k
-                                          </td>
-                                        </tr>
-                                        {participant.otherAmount !== 0 && (
-                                          <tr>
-                                            <td className="py-1 w-24 font-primaryRegular flex items-start">
-                                              - Other:
-                                            </td>
-                                            <td className="py-1 text-left font-primaryRegular">
-                                              {participant.otherAmount < 0
-                                                ? `Nhận lại ${Math.abs(
-                                                    participant.otherAmount
-                                                  )}`
-                                                : `Trả thêm ${participant.otherAmount}`}
-                                              k{" "}
-                                              {participant.reasonOtherAmount !==
-                                                "" && (
-                                                <span>
-                                                  (
-                                                  {
-                                                    participant.reasonOtherAmount
-                                                  }
-                                                  )
-                                                </span>
-                                              )}
-                                            </td>
-                                          </tr>
-                                        )}
-                                        <tr>
-                                          <td className="py-1 w-24 font-primaryMedium ">
-                                            - Remaining:
-                                          </td>
-                                          <td className="py-1 text-left font-primaryMedium">
-                                            {participant.paidAmount === 0
-                                              ? `${participant.paidAmount}k`
-                                              : participant.paidAmount < 0
-                                              ? `Nhận lại ${Math.abs(
-                                                  participant.paidAmount
-                                                )}k`
-                                              : `Trả thêm ${participant.paidAmount}k`}
-                                          </td>
-                                        </tr>
-                                      </tbody>
-                                    </table>
-                                  </span>
-                                  <div className="hidden sm:flex mr-2">
-                                    <button
-                                      onClick={() =>
-                                        handleEditParticipant(
-                                          participant,
-                                          category._id
-                                        )
-                                      }
-                                      className="w-10 h-7 text-yellow-600 hover:text-yellow-700 font-primaryBold rounded-lg text-md py-1"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        setDeleteParticipantInfo({
-                                          participantId: participant._id,
-                                          categoryId: category._id,
-                                        })
-                                      }
-                                      className="w-10 h-7 text-red-500 hover:text-red-600 font-primaryBold rounded-lg text-md py-1 ml-2 sm:pl-0"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                  <div className="flex sm:hidden mr-2">
-                                    <button
-                                      onClick={() =>
-                                        handleEditParticipant(
-                                          participant,
-                                          category._id
-                                        )
-                                      }
-                                      className="w-7 h-7 text-yellow-600 hover:text-yellow-700 focus:ring-2 focus:ring-gray-300 rounded-lg text-md py-1 px-1 flex justify-end"
-                                    >
-                                      <Edit02Icon size={18} />
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        setDeleteParticipantInfo({
-                                          participantId: participant._id,
-                                          categoryId: category._id,
-                                        })
-                                      }
-                                      className="w-7 h-7 text-red-500 hover:text-red-600 focus:ring-2 focus:ring-gray-300 rounded-lg text-md py-1 px-1 ml-1 flex justify-end"
-                                    >
-                                      <Delete02Icon size={18} />
-                                    </button>
-                                  </div>
-                                </li>
-                              )
+                                  ×
+                                </button>
+                              </div>
+                            ) : (
+                              <label className="cursor-pointer w-48 h-52 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 hover:bg-gray-50 transition-colors">
+                                <span className="text-gray-400 text-2xl leading-none">
+                                  +
+                                </span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) =>
+                                    handleQrFileChange(
+                                      category._id,
+                                      e.target.files?.[0] ?? null,
+                                    )
+                                  }
+                                />
+                              </label>
+                            );
+                          })()}
+                        </div>
+                      </div>
+
+                      <div className="block sm:hidden">
+                        {calculateErrorMap[category._id] && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {calculateErrorMap[category._id]}
+                          </p>
+                        )}
+                        {exportErrorMap[category._id] && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {exportErrorMap[category._id]}
+                          </p>
+                        )}
+                        <div className="flex space-x-4 mt-2">
+                          <button
+                            onClick={() => handleCalculate(category)}
+                            disabled={calculateLoading}
+                            className="mt-3 text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
+                          >
+                            {calculateLoading ? (
+                              <Loading size="sm" />
+                            ) : (
+                              "Tính tiền"
                             )}
-                          </ul>
-                        </>
+                          </button>
+
+                          <button
+                            onClick={() => handleExport(category)}
+                            disabled={exportLoading || uploadQrLoading}
+                            className="mt-3 text-black bg-blue-400 hover:bg-blue-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
+                          >
+                            {uploadQrLoading ? (
+                              <Loading size="sm" />
+                            ) : exportLoading ? (
+                              <Loading size="sm" />
+                            ) : (
+                              "Show kết quả"
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <hr className="mt-4 mx-1 border-gray-300" />
+                    <div className="mt-5 mb-2">
+                      <h4 className="text-md font-primaryMedium mb-3 text-black flex ml-1">
+                        <CheckmarkCircle03Icon
+                          size={20}
+                          className="inline mr-1 mt-0.5"
+                        />
+                        Chi tiết
+                      </h4>
+                      <p
+                        className={`font-primaryRegular mx-3.5 text-justify whitespace-pre-line ${category.paymentResult === "" ? "text-gray-500 italic" : "text-gray-700"}`}
+                      >
+                        {category.paymentResult !== ""
+                          ? category.paymentResult
+                          : "Chưa có thông tin chi tiết"}
+                      </p>
+                    </div>
+                    <div className="mt-5 mb-1">
+                      {participants[category._id]?.length ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm border-collapse">
+                            <thead>
+                              <tr className="border-b border-gray-200 text-gray-600">
+                                <th className="py-2 px-2 text-left font-primaryMedium w-10">
+                                  STT
+                                </th>
+                                <th className="py-2 px-2 text-left font-primaryMedium">
+                                  Tên
+                                </th>
+                                {/* <th className="py-2 px-2 text-left font-primaryMedium">
+                                    Số lượng
+                                  </th> */}
+                                <th className="py-2 px-2 text-left font-primaryMedium">
+                                  Số tiền
+                                </th>
+                                <th className="py-2 px-2 text-center font-primaryMedium">
+                                  Đã thanh toán
+                                </th>
+                                <th className="py-2 px-2 text-center font-primaryMedium">
+                                  Xóa thành viên
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {participants[category._id].map(
+                                (participant: Participant, index) => (
+                                  <tr
+                                    key={participant._id}
+                                    className="border-b border-gray-100"
+                                  >
+                                    <td className="py-2 px-2 text-gray-500 font-primaryRegular">
+                                      {index + 1}
+                                    </td>
+                                    <td className="py-2 px-2 font-primaryMedium">
+                                      {participant.name}
+                                    </td>
+                                    {/* <td className="py-2.5 px-2 font-primaryRegular">
+                                        {participant.quantity}
+                                      </td> */}
+                                    <td className="py-2 px-2 font-primaryRegular">
+                                      {participant.money > 0
+                                        ? (
+                                            Math.round(
+                                              participant.money / 1000,
+                                            ) * 1000
+                                          ).toLocaleString() + "đ"
+                                        : "0k"}
+                                    </td>
+                                    <td className="py-2 px-2 text-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={participant.isPaid}
+                                        onChange={(e) =>
+                                          handleToggleIsPaid(
+                                            participant,
+                                            category._id,
+                                            e.target.checked,
+                                          )
+                                        }
+                                        className="w-4 h-4 accent-green-500 cursor-pointer"
+                                      />
+                                    </td>
+                                    <td className="py-2 px-2 text-center">
+                                      <button
+                                        onClick={() =>
+                                          setDeleteParticipantInfo({
+                                            participantId: participant._id,
+                                            categoryId: category._id,
+                                          })
+                                        }
+                                        className="text-black bg-red-400 hover:bg-red-500 font-primaryMedium rounded-lg text-xs px-3 py-1.5"
+                                      >
+                                        Xóa
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ),
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       ) : (
-                        <div className="flex items-center justify-center p-8  rounded-lg mr-0.5">
+                        <div className="flex items-center justify-center p-8 rounded-lg mr-0.5">
                           <div className="text-center">
                             <div className="text-gray-400 mb-2">
                               <svg
@@ -944,7 +1047,7 @@ export const AdminPage: React.FC = () => {
                               </svg>
                             </div>
                             <p className="text-sm text-gray-600 font-primaryRegular">
-                              No participants found
+                              Không có người tham gia cho ngày này!!!
                             </p>
                           </div>
                         </div>
@@ -979,104 +1082,6 @@ export const AdminPage: React.FC = () => {
                   Select Date (Choose this date to vote)
                 </span>
               </label>
-              {/* Participants List */}
-              {editCategory && (
-                <div className="mb-6">
-                  <p className="text-md font-primaryMedium mb-2">
-                    List participants:
-                  </p>
-                  {!participants[editCategory._id] ? (
-                    // Loading state - when participants data is not loaded yet
-                    <div className="flex items-center justify-center p-8">
-                      <Loading size="lg" />
-                    </div>
-                  ) : participants[editCategory._id].length === 0 ? (
-                    // No participants found
-                    <div className="flex items-center justify-center p-8 bg-gray-50 rounded-lg">
-                      <div className="text-center">
-                        <div className="text-gray-400 mb-2">
-                          <svg
-                            className="w-12 h-12 mx-auto"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                        </div>
-                        <p className="text-sm text-gray-600 font-primaryRegular">
-                          No participants found
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    // Show participants list
-                    <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
-                      {participants[editCategory._id].map((participant) => (
-                        <div
-                          key={participant._id}
-                          className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={
-                              selectedParticipants[participant._id]?.selected ||
-                              false
-                            }
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>
-                            ) =>
-                              handleParticipantCheckboxChange(
-                                participant._id,
-                                e.target.checked
-                              )
-                            }
-                            className="w-3 h-3 accent-green-500 bg-gray-100 border-gray-300 rounded focus:ring-gray-500"
-                          />
-                          <span className="flex-1 text-sm font-primaryRegular text-gray-900">
-                            {participant.name}
-                          </span>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-600">Paid:</span>
-                            <div className="flex items-center space-x-1">
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={
-                                  selectedParticipants[participant._id]
-                                    ?.amount !== undefined
-                                    ? selectedParticipants[participant._id]
-                                        .amount
-                                    : participant.paymentBefore || 0
-                                }
-                                onChange={(
-                                  e: React.ChangeEvent<HTMLInputElement>
-                                ) =>
-                                  handleParticipantAmountChange(
-                                    participant._id,
-                                    e.target.value
-                                  )
-                                }
-                                className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-gray-400 focus:border-gray-400"
-                                placeholder="0"
-                              />
-                              <p className="font-primaryRegular text-gray-500">
-                                k
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
               {updateError && (
                 <p className="text-red-400 text-sm mb-4">{updateError}</p>
               )}
@@ -1091,8 +1096,7 @@ export const AdminPage: React.FC = () => {
                 <button
                   onClick={() => {
                     setEditCategory(null);
-                    setSelectedParticipants({}); // Reset selected participants
-                    setUpdateError(null); // Clear any error messages
+                    setUpdateError(null);
                   }}
                   className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 flex items-center justify-center"
                 >
@@ -1110,6 +1114,11 @@ export const AdminPage: React.FC = () => {
               <p className="text-sm mb-4">
                 Are you sure you want to delete this date?
               </p>
+              {deleteCategoryErr && (
+                <p className="text-red-400 text-sm mb-4 text-center">
+                  {deleteCategoryErr}
+                </p>
+              )}
               <div className="flex space-x-4 items-center justify-center">
                 <button
                   onClick={() => handleDeleteCategory(deleteCategoryId)}
@@ -1128,102 +1137,6 @@ export const AdminPage: React.FC = () => {
             </div>
           </div>
         )}
-        {/* Edit Participant Modal */}
-        {editParticipant && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">
-                Edit Participant: {editParticipant.name}
-              </h2>
-
-              {/* Payment Done Checkbox */}
-              <div className="mb-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={participantFormData.paymentDone}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleParticipantFormChange(
-                        "paymentDone",
-                        e.target.checked
-                      )
-                    }
-                    className="w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-gray-500 accent-green-500 mr-3"
-                  />
-                  <span className="text-sm font-primaryMedium">
-                    Payment Done
-                  </span>
-                </label>
-              </div>
-
-              {/* Other Amount Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-primaryMedium text-gray-700 mb-2">
-                  Other Amount (k):
-                </label>
-
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={participantFormData.otherAmount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    handleParticipantFormChange(
-                      "otherAmount",
-                      parseFloat(e.target.value) || 0
-                    )
-                  }
-                  className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  placeholder="Enter amount"
-                />
-
-                <span className="text-[12px] font-primaryMedium text-gray-500 italic">
-                  ("Amount &lt; 0": nhận thêm, "Amount &gt; 0": trả thêm)
-                </span>
-              </div>
-
-              {/* Reason Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-primaryMedium text-gray-700 mb-2">
-                  Note:
-                </label>
-                <textarea
-                  value={participantFormData.reason}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    handleParticipantFormChange("reason", e.target.value)
-                  }
-                  className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 h-20 resize-none"
-                  placeholder="Điền note (người trả tiền trước)"
-                />
-              </div>
-
-              {/* Error Message */}
-              {participantUpdateError && (
-                <p className="text-red-400 text-sm mb-5">
-                  {participantUpdateError}
-                </p>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex space-x-4 items-center justify-center mt-4">
-                <button
-                  onClick={handleUpdateParticipant}
-                  disabled={loading}
-                  className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 flex items-center justify-center space-x-2 min-w-[80px]"
-                >
-                  {participantsLoading ? <Loading size="sm" /> : "Update"}
-                </button>
-                <button
-                  onClick={handleCloseParticipantModal}
-                  className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 flex items-center justify-center"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Delete Participant Modal */}
         {deleteParticipantInfo && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -1242,7 +1155,7 @@ export const AdminPage: React.FC = () => {
                   onClick={() =>
                     handleDeleteParticipant(
                       deleteParticipantInfo.participantId,
-                      deleteParticipantInfo.categoryId
+                      deleteParticipantInfo.categoryId,
                     )
                   }
                   disabled={loading}
@@ -1261,6 +1174,7 @@ export const AdminPage: React.FC = () => {
           </div>
         )}
       </div>
+      <ChatBot onRefreshNeeded={() => dispatch(fetchCategories())} />
     </>
   );
 };

@@ -16,7 +16,7 @@ export const FormComponent: React.FC<{
   const [username, setUsername] = useState("");
   const dispatch = useAppDispatch();
   const { error, loading, message } = useSelector(
-    (state: RootState) => state.user
+    (state: RootState) => state.user,
   );
   const [showModal, setShowModal] = useState(false);
 
@@ -34,11 +34,11 @@ export const FormComponent: React.FC<{
   const handleSubmit = (status: "tham gia" | "lần sau") => {
     if (!username.trim()) {
       dispatch(clearSubmitError());
-      dispatch(submitUser({ name: "", status, categoryId }));
+      dispatch(submitUser({ name: "", status, quantity: 1, categoryId }));
       return;
     }
     dispatch(clearSubmitError());
-    dispatch(submitUser({ name: username, status, categoryId }));
+    dispatch(submitUser({ name: username, status, quantity: 1, categoryId }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,26 +55,42 @@ export const FormComponent: React.FC<{
   const handleNextTime = () => {
     onGoCom1Click();
     dispatch(clearSubmitError());
-  }
+  };
 
   return (
     <>
       <div className="max-w-sm mx-auto">
-        <div className="mb-5">
-          <input
-            type="text"
-            id="username"
-            className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5"
-            placeholder="Min Le..."
-            value={username}
-            onChange={handleInputChange}
-            required
-          />
-          {error && (
-            <p className="text-red-500 font-primaryMedium text-md mt-2">
-              {error}
+        <div className="flex space-x-4 mx-5 items-center justify-center">
+          <div className="mb-5">
+            <input
+              type="text"
+              id="username"
+              className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5"
+              placeholder="Nhập tên bạn đi nè..."
+              value={username}
+              onChange={handleInputChange}
+              required
+            />
+            <p className="text-sm text-gray-600 font-primaryRegular italic mt-1">
+              Đăng ký cho vãng lai thì nhập "Tên (vãng lai)" nha!!!
             </p>
-          )}
+            {error && (
+              <p className="text-red-500 font-primaryMedium text-md mt-2">
+                {error}
+              </p>
+            )}
+          </div>
+          {/* <div className="mb-5 w-1/3">
+            <input
+              type="number"
+              id="quantity"
+              min={1}
+              className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5"
+              placeholder="Số lượng bạn muốn đăng ký nè..."
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+            />
+          </div> */}
         </div>
         <div className="flex space-x-4 items-center justify-center">
           <button
