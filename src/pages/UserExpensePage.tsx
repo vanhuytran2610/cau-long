@@ -238,7 +238,7 @@ export const UserExpensePage: React.FC = () => {
                             </svg>
                           </div>
                           <p className="text-sm text-gray-600 font-primaryRegular">
-                            No participants found
+                            Không có người tham gia nào
                           </p>
                         </div>
                       </div>
@@ -251,7 +251,7 @@ export const UserExpensePage: React.FC = () => {
 
           {categories.length === 0 && (
             <p className="text-center text-gray-500 font-primaryRegular py-12">
-              Chưa có buổi đánh nào.
+              Không có ngày nào.
             </p>
           )}
         </div>

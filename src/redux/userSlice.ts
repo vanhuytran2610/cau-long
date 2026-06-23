@@ -42,6 +42,9 @@ export const fetchUserCategories = createAsyncThunk<
     const response = await axios.get(`${API_URL}/api/user/categories`);
     return response.data;
   } catch (error: any) {
+    if (error.response?.status === 404) {
+      return { statusCode: 404, message: "No categories found!", data: [] };
+    }
     return rejectWithValue(
       error.response?.data?.message || "Failed to fetch categories"
     );
