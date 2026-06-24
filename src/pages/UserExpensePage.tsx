@@ -102,14 +102,14 @@ export const UserExpensePage: React.FC = () => {
 
                   {/* Payment Info & QR */}
                   {(category.paymentInfo || category.qr_img_url) && (
-                    <div className="mt-4 pb-2 mx-1 flex gap-6">
+                    <div className="mt-4 pb-2 mx-1 sm:flex gap-6">
                       {category.paymentInfo && (
                         <div className="flex-1">
                           <p className="text-md font-primaryMedium text-black mb-2">
                             <InformationDiamondIcon
-                            size={20}
-                            className="inline mr-1 -mt-0.5"
-                          />
+                              size={20}
+                              className="inline mr-1 -mt-0.5"
+                            />
                             Thông tin buổi đánh
                           </p>
                           <p className="text-md font-primaryRegular text-gray-700 whitespace-pre-line mx-3">
@@ -118,19 +118,14 @@ export const UserExpensePage: React.FC = () => {
                         </div>
                       )}
                       {category.qr_img_url && (
-                        <div>
-                          <p className="text-md font-primaryMedium text-black mb-2">
-                            <QrCode01Icon
-                            size={20}
-                            className="inline mr-1 -mt-0.5"
-                          />
-                            Mã QR
-                          </p>
-                          <img
-                            src={category.qr_img_url}
-                            alt="QR"
-                            className="w-48 h-52 mr-2 object-cover rounded-lg border border-gray-200"
-                          />
+                        <div className="mt-3 sm:mt-0.5">
+                          <div className="flex items-center justify-center">
+                            <img
+                              src={category.qr_img_url}
+                              alt="QR"
+                              className="w-48 h-52 mr-2 object-cover rounded-lg border border-gray-200"
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -139,21 +134,21 @@ export const UserExpensePage: React.FC = () => {
                   {/* Participants */}
                   <hr className="mt-4 mx-1 border-gray-300" />
                   <div className="mt-5 mb-2">
-                      <h4 className="text-md font-primaryMedium mb-3 text-black flex ml-1">
-                        <CheckmarkCircle03Icon
-                          size={20}
-                          className="inline mr-1 mt-0.5"
-                        />
-                        Chi tiết
-                      </h4>
-                      <p
-                        className={`font-primaryRegular mx-3 text-justify whitespace-pre-line ${category.paymentResult === "" ? "text-gray-500 italic" : "text-gray-700"}`}
-                      >
-                        {category.paymentResult !== ""
-                          ? category.paymentResult
-                          : "Chưa có thông tin chi tiết"}
-                      </p>
-                    </div>
+                    <h4 className="text-md font-primaryMedium mb-3 text-black flex ml-1">
+                      <CheckmarkCircle03Icon
+                        size={20}
+                        className="inline mr-1 mt-0.5"
+                      />
+                      Chi tiết
+                    </h4>
+                    <p
+                      className={`font-primaryRegular mx-3 text-justify whitespace-pre-line ${category.paymentResult === "" ? "text-gray-500 italic" : "text-gray-700"}`}
+                    >
+                      {category.paymentResult !== ""
+                        ? category.paymentResult
+                        : "Chưa có thông tin chi tiết"}
+                    </p>
+                  </div>
                   <div className="mt-5 mb-1">
                     {category.participants?.length ? (
                       <>
