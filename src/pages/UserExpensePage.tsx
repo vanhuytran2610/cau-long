@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import Loading from "../components/Loading";
 import {
   InformationDiamondIcon,
-  QrCode01Icon,
   CheckmarkCircle03Icon,
 } from "hugeicons-react";
 import { fetchUserCategories } from "../redux/userSlice";
