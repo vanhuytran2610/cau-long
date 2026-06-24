@@ -15,7 +15,7 @@ export const FormComponent: React.FC<{
 }> = ({ onGoCom1Click, categoryId }) => {
   const [username, setUsername] = useState("");
   const dispatch = useAppDispatch();
-  const { error, loading, message } = useSelector(
+  const { error, loading, message, isCategoryCalculated } = useSelector(
     (state: RootState) => state.user,
   );
   const [showModal, setShowModal] = useState(false);
@@ -59,21 +59,29 @@ export const FormComponent: React.FC<{
 
   return (
     <>
-      <div className="max-w-sm mx-auto">
+      <div className="max-w-md mx-auto">
         <div className="flex space-x-4 mx-5 items-center justify-center">
           <div className="mb-5">
             <input
               type="text"
               id="username"
               className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5"
-              placeholder="Nhập tên bạn đi nè..."
+              placeholder={`${isCategoryCalculated ? "" : "Nhập tên bạn đi nè..."}`}
               value={username}
               onChange={handleInputChange}
               required
+              disabled={loading || isCategoryCalculated} // Disable input if loading or category is calculated
             />
-            <p className="text-sm text-gray-600 font-primaryRegular italic mt-1">
-              Đăng ký cho vãng lai thì nhập "Tên (vãng lai)" nha!!!
-            </p>
+            {isCategoryCalculated ? (
+              <p className="text-red-500 font-primaryMedium text-sm mt-2">
+                Ngày đánh cầu đã đến, bạn không thể thêm tên nữa nha!
+              </p>
+            ) : (
+              <p className="text-sm text-gray-600 font-primaryRegular italic mt-1">
+                Nếu bạn đăng ký cho vãng lai thì nhập "Tên (vãng lai)" nha!!!
+              </p>
+            )}
+
             {error && (
               <p className="text-red-500 font-primaryMedium text-md mt-2">
                 {error}
@@ -92,20 +100,31 @@ export const FormComponent: React.FC<{
             />
           </div> */}
         </div>
-        <div className="flex space-x-4 items-center justify-center">
-          <button
-            onClick={() => handleSubmit("tham gia")}
-            className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
-          >
-            {loading ? <Loading size="sm" /> : `OK`}
-          </button>
-          <button
-            onClick={handleNextTime}
-            className="text-black bg-red-300 hover:bg-red-400 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
-          >
-            Lần sau
-          </button>
-        </div>
+        {!isCategoryCalculated ? (
+          <div className="flex space-x-4 items-center justify-center">
+            <button
+              onClick={() => handleSubmit("tham gia")}
+              className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
+            >
+              {loading ? <Loading size="sm" /> : `OK`}
+            </button>
+            <button
+              onClick={handleNextTime}
+              className="text-black bg-red-300 hover:bg-red-400 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
+            >
+              Lần sau
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={handleNextTime}
+              className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
+            >
+              Trang chủ
+            </button>
+          </div>
+        )}
       </div>
       {/* Success Modal */}
       {showModal && (

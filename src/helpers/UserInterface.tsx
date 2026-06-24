@@ -13,6 +13,7 @@ export interface UserState {
   userCategories: UserCategory[];
   userCategoriesLoading: boolean;
   userCategoriesError: string | null;
+  isCategoryCalculated: boolean;
 }
 
 export interface FetchUserCategoriesResponse {

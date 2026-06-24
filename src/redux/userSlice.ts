@@ -18,6 +18,7 @@ const initialState: UserState = {
   userCategories: [],
   userCategoriesLoading: false,
   userCategoriesError: null,
+  isCategoryCalculated: false,
 };
 
 export const submitUser = createAsyncThunk<
@@ -111,11 +112,13 @@ const userSlice = createSlice({
           if (action.payload.data) {
             state.categoryId = action.payload.data._id;
             state.categoryName = action.payload.data.name;
+            state.isCategoryCalculated = action.payload.data.isCalculated;
             localStorage.setItem("categoryName", state.categoryName as string)
           } else {
             // Handle the case where data is null (No category selected)
             state.categoryId = null;
             state.categoryName = null;
+            state.isCategoryCalculated = false;
           }
         }
       )
