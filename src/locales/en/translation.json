@@ -70,7 +70,8 @@
         "moneyTable": "Amount",
         "isPaidTable": "Paid",
         "noParticipant": "No participants",
-        "noCategory": "No sessions available."
+        "noCategory": "No sessions available.",
+        "listCategories": "Session List"
     },
     "admin": {
         "title": "Badminton Management",

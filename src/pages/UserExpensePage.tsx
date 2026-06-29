@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Loading from "../components/Loading";
-import {
-  InformationDiamondIcon,
-  CheckmarkCircle03Icon,
-} from "hugeicons-react";
+import { InformationDiamondIcon, CheckmarkCircle03Icon } from "hugeicons-react";
 import { fetchUserCategories } from "../redux/userSlice";
 import { useAppDispatch, type RootState } from "../redux/store";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { setLanguage } from "../redux/languageSlice";
 
 export const UserExpensePage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -19,9 +17,10 @@ export const UserExpensePage: React.FC = () => {
   } = useSelector((state: RootState) => state.user);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const { t } = useTranslation();
+  const language = useSelector((state: RootState) => state.language.language);
 
   useEffect(() => {
-    document.title = t('expense.title');
+    document.title = t("expense.title");
     dispatch(fetchUserCategories());
   }, [dispatch]);
 
@@ -53,15 +52,31 @@ export const UserExpensePage: React.FC = () => {
     <div className="my-16 flex justify-center">
       <div className="max-w-4xl w-full px-2 sm:px-2 md:px-4 lg:px-6 xl:px-6 2xl:px-8">
         <div className="mb-16 pb-4 border-b-2 border-gray-500 flex items-center justify-between">
-          <h1 className="text-3xl font-primaryBold">{t('expense.title')}</h1>
-          <button className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-md px-5 py-2.5">
-            <Link to="/" className="flex items-center justify-center">
-              {t('formComponent.homepage')}
-            </Link>
-          </button>
+          <h1 className="text-3xl font-primaryBold">{t("expense.title")}</h1>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center bg-gray-50 rounded-xl border-2 border-gray-200 p-0.5 text-sm font-primaryMedium">
+              <button
+                onClick={() => dispatch(setLanguage("vi"))}
+                className={`px-2.5 py-1 rounded-lg transition-colors ${language === "vi" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                VI
+              </button>
+              <button
+                onClick={() => dispatch(setLanguage("en"))}
+                className={`px-2.5 py-1 rounded-lg transition-colors ${language === "en" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                EN
+              </button>
+            </div>
+            <button className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-md px-5 py-2.5">
+              <Link to="/" className="flex items-center justify-center">
+                {t("formComponent.homepage")}
+              </Link>
+            </button>
+          </div>
         </div>
 
-        <h2 className="text-xl font-primaryMedium mb-4">Danh sách buổi đánh</h2>
+        <h2 className="text-xl font-primaryMedium mb-4">{t('expense.listCategories')}</h2>
         <div className="space-y-4">
           {categories.map((category) => (
             <div
@@ -111,7 +126,7 @@ export const UserExpensePage: React.FC = () => {
                               size={20}
                               className="inline mr-1 -mt-0.5"
                             />
-                            {t('expense.categoryInfo')}
+                            {t("expense.categoryInfo")}
                           </p>
                           <p className="text-md font-primaryRegular text-gray-700 whitespace-pre-line mx-3">
                             {category.paymentInfo}
@@ -140,14 +155,14 @@ export const UserExpensePage: React.FC = () => {
                         size={20}
                         className="inline mr-1 mt-0.5"
                       />
-                      {t('expense.detail')}
+                      {t("expense.detail")}
                     </h4>
                     <p
                       className={`font-primaryRegular mx-3 text-justify whitespace-pre-line ${category.paymentResult === "" ? "text-gray-500 italic" : "text-gray-700"}`}
                     >
                       {category.paymentResult !== ""
                         ? category.paymentResult
-                        : t('expense.noDetail')}
+                        : t("expense.noDetail")}
                     </p>
                   </div>
                   <div className="mt-5 mb-1">
@@ -158,19 +173,19 @@ export const UserExpensePage: React.FC = () => {
                             <thead>
                               <tr className="border-b border-gray-200 text-gray-600">
                                 <th className="py-2 px-2 text-left font-primaryMedium w-10">
-                                  {t('expense.no1Table')}
+                                  {t("expense.no1Table")}
                                 </th>
                                 <th className="py-2 px-2 text-left font-primaryMedium">
-                                  {t('expense.nameTable')}
+                                  {t("expense.nameTable")}
                                 </th>
                                 {/* <th className="py-2 px-2 text-left font-primaryMedium">
                                   Số lượng
                                 </th> */}
                                 <th className="py-2 px-2 text-left font-primaryMedium">
-                                  {t('expense.moneyTable')}
+                                  {t("expense.moneyTable")}
                                 </th>
                                 <th className="py-2 px-2 text-center font-primaryMedium">
-                                  {t('expense.isPaidTable')}
+                                  {t("expense.isPaidTable")}
                                 </th>
                               </tr>
                             </thead>
@@ -234,7 +249,7 @@ export const UserExpensePage: React.FC = () => {
                             </svg>
                           </div>
                           <p className="text-sm text-gray-600 font-primaryRegular">
-                            {t('expense.noParticipant')}
+                            {t("expense.noParticipant")}
                           </p>
                         </div>
                       </div>
@@ -247,7 +262,7 @@ export const UserExpensePage: React.FC = () => {
 
           {categories.length === 0 && (
             <p className="text-center text-gray-500 font-primaryRegular py-12">
-              {t('expense.noCategory')}
+              {t("expense.noCategory")}
             </p>
           )}
         </div>

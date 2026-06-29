@@ -70,7 +70,8 @@
         "moneyTable": "Số tiền",
         "isPaidTable": "Đã thanh toán",
         "noParticipant": "Không có người tham gia nào",
-        "noCategory": "Không có ngày đánh nào."
+        "noCategory": "Không có ngày đánh nào.",
+        "listCategories": "Danh sách buổi đánh"
     },
     "admin": {
         "title": "Quản lý đánh cầu",
