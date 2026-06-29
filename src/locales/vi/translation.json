@@ -1,0 +1,148 @@
+{
+    "chatbot": {
+        "toggleButtonTitle": "Chat với AI",
+        "resetConversation": "Cuộc trò chuyện mới",
+        "minimize": "Thu nhỏ",
+        "maximize": "Phóng to",
+        "inputPlaceholder": "Nhập tin nhắn...",
+        "welcomeFallback": "Xin chào! Tôi có thể giúp gì cho bạn?",
+        "errorMessage": "Có lỗi xảy ra. Vui lòng thử lại."
+    },
+    "component1": {
+        "message": "Ê, đi đánh cầu lông {{categoryName}} không?",
+        "goButton": "Đi",
+        "noButton": "Không đi"
+    },
+    "component3": {
+        "message": "Ê, đi đánh cầu lông {{categoryName}} không?",
+        "goButton": "Đi",
+        "noButton": "Cho bạn suy nghĩ lại!"
+    },
+    "component4": {
+        "message": "Ê, đi đánh cầu lông {{categoryName}} không?",
+        "goButton": "Đi",
+        "noButton": "Bạn sẽ hối hận đấy"
+    },
+    "component6": {
+        "message": "Ê, đi đánh cầu lông {{categoryName}} không?",
+        "goButton": "Đi",
+        "noButton": "Cho bạn cơ hội cuối"
+    },
+    "component8": {
+        "message": "Ê, đi đánh cầu lông {{categoryName}} không?",
+        "goButton": "Đi",
+        "noButton": "2 chai nước"
+    },
+    "component10": {
+        "goButton": "Đi",
+        "noButton": "TÔI MỜI..."
+    },
+    "component12": {
+        "message": "{{categoryName}} nhé !!!",
+        "formMessage": "Tuyệt vời quá!!! Đi thì bạn điền tên rồi bấm \"OK\" nha, còn nếu không đi thì bấm \"Lần sau\" nha 🙋‍♀️🙋‍♂️🙆‍♂️"
+    },
+    "componentMeme1": {
+        "linkText": "Xem phí vãng lai ở đây nha"
+    },
+    "formComponent": {
+        "inputNamePlaceholder": "Nhập tên bạn đi nè...",
+        "rejectInput": "Ngày đánh cầu đã đến, bạn không thể đăng ký nữa nha!",
+        "noteInput": "Nếu bạn đăng ký cho vãng lai thì nhập \"Tên (vãng lai)\" nha!!!",
+        "nextTime": "Lần sau",
+        "homepage": "Trang chủ",
+        "modalClose": "Đóng"
+    },
+    "mainPage": {
+        "title": "Cầu lông {{categoryName}}"
+    },
+    "login": {
+        "title": "Đăng nhập",
+        "header": "Đăng nhập trang Admin",
+        "loginButton": "Đăng nhập"
+    },
+    "expense": {
+        "title": "Phí vãng lai",
+        "categoryInfo": "Thông tin buổi đánh",
+        "detail": "Chi tiết",
+        "noDetail": "Chưa có thông tin chi tiết",
+        "no1Table": "STT",
+        "nameTable": "Tên",
+        "moneyTable": "Số tiền",
+        "isPaidTable": "Đã thanh toán",
+        "noParticipant": "Không có người tham gia nào",
+        "noCategory": "Không có ngày đánh nào."
+    },
+    "admin": {
+        "title": "Quản lý đánh cầu",
+        "logout": "Đăng xuất",
+        "auth": {
+            "title": "Xác thực cần thiết",
+            "description": "Bạn cần phải đăng nhập để truy cập trang này. Vui lòng đăng nhập để tiếp tục.",
+            "goToLogin": "Chuyển đến trang đăng nhập"
+        },
+        "createDate": {
+            "title": "Tạo Ngày Mới",
+            "button": "Tạo Ngày",
+            "placeholder": "Ngày 27/6, 19h30"
+        },
+        "dateList": {
+            "title": "Danh Sách Ngày Đánh Cầu",
+            "selected": "Ngày được chọn",
+            "notSelected": "Chưa chọn",
+            "edit": "Sửa",
+            "delete": "Xóa",
+            "showDetailInfo": "Hiện thông tin chi tiết",
+            "hideDetailInfo": "Ẩn thông tin chi tiết"
+        },
+        "categoryDetail": {
+            "paymentInfo": "Thông tin buổi đánh",
+            "qrCode": "Mã QR",
+            "calculate": "Tính tiền",
+            "showResult": "Show kết quả",
+            "detail": "Chi tiết",
+            "noDetail": "Chưa có thông tin chi tiết",
+            "examplePrompt": "VD: Hôm nay tiền sân là ..., tiền cầu là ... (... trái cầu, 1 trái giá ...)"
+        },
+        "table": {
+            "no": "STT",
+            "name": "Tên",
+            "amount": "Số tiền",
+            "isPaid": "Đã thanh toán",
+            "deleteParticipant": "Xóa thành viên",
+            "noParticipants": "Không có người tham gia cho ngày này!!!"
+        },
+        "editModal": {
+            "title": "Sửa Ngày",
+            "dateLabel": "Ngày:",
+            "selectDate": "Chọn Ngày (Chọn ngày này để bỏ phiếu)",
+            "save": "Lưu",
+            "cancel": "Hủy"
+        },
+        "deleteModal": {
+            "title": "Xác nhận xóa",
+            "confirmDate": "Bạn có chắc chắn muốn xóa ngày này không?",
+            "confirmParticipant": "Bạn có chắc chắn muốn xóa thành viên này không?",
+            "delete": "Xóa"
+        },
+        "toast": {
+            "loginRequired": "Hãy đăng nhập để thực hiện hành động này",
+            "dateCreated": "Tạo ngày thành công!",
+            "createFailed": "Tạo ngày không thành công!",
+            "dateUpdated": "Cập nhật ngày thành công!",
+            "updateFailed": "Cập nhật ngày không thành công!",
+            "dateDeleted": "Xóa ngày thành công!",
+            "deleteFailed": "Xóa ngày không thành công!",
+            "updateSuccess": "Cập nhật thành công!",
+            "updateError": "Cập nhật không thành công!",
+            "calculateSuccess": "Tính tiền thành công!",
+            "exportSuccess": "Show kết quả thành công!",
+            "participantDeleted": "Xóa thành viên thành công!",
+            "participantDeleteFailed": "Xóa thành viên không thành công!",
+            "loginToViewParticipants": "Hãy đăng nhập để xem thông tin người tham gia",
+            "alreadyLoggedOut": "Bạn đã đăng xuất",
+            "logoutSuccess": "Đã đăng xuất thành công!",
+            "loginToCreate": "Hãy đăng nhập để tạo ngày",
+            "loginToUpdate": "Hãy đăng nhập để cập nhật ngày"
+        }
+    }
+}

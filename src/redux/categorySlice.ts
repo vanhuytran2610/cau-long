@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
+// import axios from "axios";
+import axiosInstance from "../helpers/axiosInstance";
 import type { RootState } from "./store";
 import { API_URL, CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from "../helpers/constants";
 import { removeAuthFromStorage } from "./authSlice";
-import type { CalculateCategoryPayload, CalculateCategoryResponse, CategoryState, CreateCategoryPayload, CreateCategoryResponse, DeleteParticipantResponse, ExportCategoryPayload, ExportCategoryResponse, ListCategoriesResponse, ListParticipantsResponse, UpdateCategoryPayload, UpdateCategoryResponse, UpdateParticipantPayload, UpdateParticipantResponse, UploadQrResponse } from "../helpers/CategoryInterface";
+import type { CalculateCategoryPayload, CalculateCategoryResponse, CategoryState, CreateCategoryPayload, CreateCategoryResponse, DeleteParticipantResponse, ExportCategoryPayload, ExportCategoryResponse, ListCategoriesResponse, ListParticipantsResponse, UpdateCategoryPayload, UpdateCategoryResponse, UpdateParticipantPayload, UpdateParticipantResponse, UploadQrResponse } from "../interface/CategoryInterface";
 
 const initialState: CategoryState = {
   categories: [],
@@ -27,7 +28,7 @@ export const createCategory = createAsyncThunk<
 >("category/createCategory", async (payload, { getState, rejectWithValue }) => {
   const { auth } = getState() as { auth: { token: string | null } };
   try {
-    const response = await axios.post(`${API_URL}/api/categories`, payload, {
+    const response = await axiosInstance.post(`${API_URL}/api/categories`, payload, {
       headers: { Authorization: `Bearer ${auth.token}` },
     });
     return response.data;
@@ -45,7 +46,7 @@ export const updateCategory = createAsyncThunk<
 >("category/updateCategory", async (payload, { getState, rejectWithValue }) => {
   const { auth } = getState() as { auth: { token: string | null } };
   try {
-    const response = await axios.put(
+    const response = await axiosInstance.put(
       `${API_URL}/api/categories/${payload.id}`,
       {
         name: payload.name,
@@ -70,7 +71,7 @@ export const deleteCategory = createAsyncThunk<
 >("category/deleteCategory", async (id, { getState, rejectWithValue }) => {
   const { auth } = getState() as { auth: { token: string | null } };
   try {
-    const response = await axios.delete(`${API_URL}/api/categories/${id}`, {
+    const response = await axiosInstance.delete(`${API_URL}/api/categories/${id}`, {
       headers: { Authorization: `Bearer ${auth.token}` },
     });
     return response.data;
@@ -88,7 +89,7 @@ export const fetchCategories = createAsyncThunk<
 >("category/fetchCategories", async (_, { getState, rejectWithValue }) => {
   const { auth } = getState() as { auth: { token: string | null } };
   try {
-    const response = await axios.get(`${API_URL}/api/categories`, {
+    const response = await axiosInstance.get(`${API_URL}/api/categories`, {
       headers: { Authorization: `Bearer ${auth.token}` },
     });
     return response.data;
@@ -108,7 +109,7 @@ export const fetchParticipantsByCategory = createAsyncThunk<
   async (categoryId, { getState, rejectWithValue }) => {
     const { auth } = getState() as { auth: { token: string | null } };
     try {
-      const response = await axios.get(
+      const response = await axiosInstance.get(
         `${API_URL}/api/participants/${categoryId}`,
         {
           headers: { Authorization: `Bearer ${auth.token}` },
@@ -132,7 +133,7 @@ export const updateParticipant = createAsyncThunk<
   async (payload, { getState, rejectWithValue }) => {
     const { auth } = getState() as { auth: { token: string | null } };
     try {
-      const response = await axios.put(
+      const response = await axiosInstance.put(
         `${API_URL}/api/participants/${payload.categoryId}/${payload.participantId}`,
         { isPaid: payload.isPaid },
         {
@@ -157,7 +158,7 @@ export const deleteParticipant = createAsyncThunk<
   async ({ participantId, categoryId }, { getState, rejectWithValue }) => {
     const { auth } = getState() as { auth: { token: string | null } };
     try {
-      const response = await axios.delete(
+      const response = await axiosInstance.delete(
         `${API_URL}/api/participants/${categoryId}/${participantId}`,
         {
           headers: { Authorization: `Bearer ${auth.token}` },
@@ -181,7 +182,7 @@ export const calculateCategory = createAsyncThunk<
   async (payload, { getState, rejectWithValue }) => {
     const { auth } = getState() as { auth: { token: string | null } };
     try {
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `${API_URL}/api/categories/${payload.id}/calculate`,
         { paymentInfo: payload.paymentInfo },
         { headers: { Authorization: `Bearer ${auth.token}` } }
@@ -204,7 +205,7 @@ export const exportCategory = createAsyncThunk<
   async (payload, { getState, rejectWithValue }) => {
     const { auth } = getState() as { auth: { token: string | null } };
     try {
-      const response = await axios.put(
+      const response = await axiosInstance.put(
         `${API_URL}/api/categories/${payload.id}/export`,
         { qr_img_url: payload.qr_img_url, qr_img_name: payload.qr_img_name },
         { headers: { Authorization: `Bearer ${auth.token}` } }
@@ -228,7 +229,7 @@ export const uploadQrImage = createAsyncThunk<
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
         formData
       );

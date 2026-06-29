@@ -8,6 +8,7 @@ import {
 } from "../redux/userSlice";
 import Loading from "./Loading";
 import { BadmintonIcon, BadmintonShuttleIcon } from "hugeicons-react";
+import { useTranslation } from "react-i18next";
 
 export const FormComponent: React.FC<{
   onGoCom1Click: () => void;
@@ -19,7 +20,7 @@ export const FormComponent: React.FC<{
     (state: RootState) => state.user,
   );
   const [showModal, setShowModal] = useState(false);
-
+  const { t } = useTranslation();
   // Track previous loading state to detect when submission completes
   const prevLoadingRef = useRef(loading);
 
@@ -66,19 +67,19 @@ export const FormComponent: React.FC<{
               type="text"
               id="username"
               className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5"
-              placeholder={`${isCategoryCalculated ? "" : "Nhập tên bạn đi nè..."}`}
+              placeholder={`${isCategoryCalculated ? "" : t('formComponent.inputNamePlaceholder')}`}
               value={username}
               onChange={handleInputChange}
               required
               disabled={loading || isCategoryCalculated} // Disable input if loading or category is calculated
             />
             {isCategoryCalculated ? (
-              <p className="text-red-500 font-primaryMedium text-sm mt-2">
-                Ngày đánh cầu đã đến, bạn không thể thêm tên nữa nha!
+              <p className="text-red-500 font-primaryMedium text-sm mt-2 text-center">
+                {t('formComponent.rejectInput')}
               </p>
             ) : (
               <p className="text-sm text-gray-600 font-primaryRegular italic mt-1">
-                Nếu bạn đăng ký cho vãng lai thì nhập "Tên (vãng lai)" nha!!!
+                {t('formComponent.noteInput')}
               </p>
             )}
 
@@ -112,16 +113,16 @@ export const FormComponent: React.FC<{
               onClick={handleNextTime}
               className="text-black bg-red-300 hover:bg-red-400 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
             >
-              Lần sau
+              {t("formComponent.nextTime")}
             </button>
           </div>
         ) : (
           <div className="flex items-center justify-center">
             <button
               onClick={handleNextTime}
-              className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-24 sm:w-auto px-5 py-2.5 text-center"
+              className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-28 sm:w-auto px-5 py-2.5 text-center"
             >
-              Trang chủ
+              {t('formComponent.homepage')}
             </button>
           </div>
         )}
@@ -142,7 +143,7 @@ export const FormComponent: React.FC<{
                 onClick={closeModal}
                 className="bg-red-400 hover:bg-red-500 text-black font-primaryMedium py-2 px-4 rounded-lg focus:ring-2 focus:outline-none focus:ring-green-300"
               >
-                Đóng
+                {t('formComponent.modalClose')}
               </button>
             </div>
           </div>

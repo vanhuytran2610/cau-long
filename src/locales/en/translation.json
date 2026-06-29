@@ -1,0 +1,148 @@
+{
+    "chatbot": {
+        "toggleButtonTitle": "Chat with AI",
+        "resetConversation": "New conversation",
+        "minimize": "Minimize",
+        "maximize": "Maximize",
+        "inputPlaceholder": "Type a message...",
+        "welcomeFallback": "Hello! How can I help you?",
+        "errorMessage": "An error occurred. Please try again."
+    },
+    "component1": {
+        "message": "Hey, want to play badminton {{categoryName}}?",
+        "goButton": "Go",
+        "noButton": "No"
+    },
+    "component3": {
+        "message": "Hey, want to play badminton {{categoryName}}?",
+        "goButton": "Go",
+        "noButton": "Think again!"
+    },
+    "component4": {
+        "message": "Hey, want to play badminton {{categoryName}}?",
+        "goButton": "Go",
+        "noButton": "You'll regret it"
+    },
+    "component6": {
+        "message": "Hey, want to play badminton {{categoryName}}?",
+        "goButton": "Go",
+        "noButton": "Last chance"
+    },
+    "component8": {
+        "message": "Hey, want to play badminton {{categoryName}}?",
+        "goButton": "Go",
+        "noButton": "2 drinks on me"
+    },
+    "component10": {
+        "goButton": "Go",
+        "noButton": "I'LL TREAT..."
+    },
+    "component12": {
+        "message": "{{categoryName}} it is!!!",
+        "formMessage": "Awesome!!! If you're coming, fill in your name and press \"OK\", otherwise press \"Next time\" 🙋‍♀️🙋‍♂️🙆‍♂️"
+    },
+    "componentMeme1": {
+        "linkText": "View drop-in fees here"
+    },
+    "formComponent": {
+        "inputNamePlaceholder": "Enter your name...",
+        "rejectInput": "The session has started, you can no longer register!",
+        "noteInput": "If you're registering as a drop-in, enter \"Name (drop-in)\"!!!",
+        "nextTime": "Next time",
+        "homepage": "Home",
+        "modalClose": "Close"
+    },
+    "mainPage": {
+        "title": "Badminton {{categoryName}}"
+    },
+    "login": {
+        "title": "Login",
+        "header": "Admin Login",
+        "loginButton": "Login"
+    },
+    "expense": {
+        "title": "Drop-in fees",
+        "categoryInfo": "Session info",
+        "detail": "Details",
+        "noDetail": "No details available",
+        "no1Table": "No.",
+        "nameTable": "Name",
+        "moneyTable": "Amount",
+        "isPaidTable": "Paid",
+        "noParticipant": "No participants",
+        "noCategory": "No sessions available."
+    },
+    "admin": {
+        "title": "Badminton Management",
+        "logout": "Logout",
+        "auth": {
+            "title": "Authentication Required",
+            "description": "You need to log in to access this page. Please log in to continue.",
+            "goToLogin": "Go to Login"
+        },
+        "createDate": {
+            "title": "Create New Date",
+            "button": "Create Date",
+            "placeholder": "Date Jun 27, 7:30pm"
+        },
+        "dateList": {
+            "title": "Badminton Sessions",
+            "selected": "Selected date",
+            "notSelected": "Not selected",
+            "edit": "Edit",
+            "delete": "Delete",
+            "showDetailInfo": "Show details",
+            "hideDetailInfo": "Hide details"
+        },
+        "categoryDetail": {
+            "paymentInfo": "Session info",
+            "qrCode": "QR Code",
+            "calculate": "Calculate",
+            "showResult": "Show result",
+            "detail": "Details",
+            "noDetail": "No details available",
+            "examplePrompt": "E.g. Today court fee is ..., shuttle fee is ... (... shuttles, 1 shuttle costs ...)"
+        },
+        "table": {
+            "no": "No.",
+            "name": "Name",
+            "amount": "Amount",
+            "isPaid": "Paid",
+            "deleteParticipant": "Remove member",
+            "noParticipants": "No participants for this session!!!"
+        },
+        "editModal": {
+            "title": "Edit Date",
+            "dateLabel": "Date:",
+            "selectDate": "Select Date (Choose this date to vote)",
+            "save": "Save",
+            "cancel": "Cancel"
+        },
+        "deleteModal": {
+            "title": "Confirm Delete",
+            "confirmDate": "Are you sure you want to delete this date?",
+            "confirmParticipant": "Are you sure you want to delete this participant?",
+            "delete": "Delete"
+        },
+        "toast": {
+            "loginRequired": "Please log in to perform this action",
+            "dateCreated": "Date created successfully!",
+            "createFailed": "Failed to create date",
+            "dateUpdated": "Date updated successfully!",
+            "updateFailed": "Failed to update date",
+            "dateDeleted": "Date deleted successfully!",
+            "deleteFailed": "Failed to delete date",
+            "updateSuccess": "Updated successfully!",
+            "updateError": "Update failed!",
+            "calculateSuccess": "Calculation successful!",
+            "exportSuccess": "Result shown successfully!",
+            "participantDeleted": "Participant removed successfully!",
+            "participantDeleteFailed": "Failed to remove participant",
+            "loginToViewParticipants": "Please log in to view participants",
+            "alreadyLoggedOut": "You are already logged out",
+            "logoutSuccess": "Logged out successfully!",
+            "loginToCreate": "Please log in to create a date",
+            "loginToUpdate": "Please log in to update a date"
+        }
+    }
+}

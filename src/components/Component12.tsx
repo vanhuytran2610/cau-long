@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ComponentMeme2 } from "./ComponentMeme2";
 import { FormComponent } from "./FormComponent";
+import { useTranslation } from "react-i18next";
 
 export const Component12: React.FC<{
   onGoCom1Click: () => void;
@@ -8,6 +9,7 @@ export const Component12: React.FC<{
   categoryName: string;
 }> = ({ onGoCom1Click, categoryId, categoryName }) => {
   const [showDelayedContent, setShowDelayedContent] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -26,14 +28,13 @@ export const Component12: React.FC<{
       }`}
     >
       <p className="text-red-400 font-primaryBold text-3xl text-center pb-10">
-        {categoryName} nhé !!!
+        {t("component12.message", { categoryName: categoryName || "" })}
       </p>
       <ComponentMeme2 />
       {(categoryId || categoryId !== "") && showDelayedContent && (
         <>
           <p className="text-green-700 font-primaryBold text-xl text-center pt-10 pb-6">
-            Tuyệt vời quá!!! Đi thì bạn điền tên rồi bấm "OK" nha, còn nếu không đi thì
-            bấm "Lần sau" nha <span className="ml-1">🙋‍♀️🙋‍♂️🙆‍♂️</span>
+            {t("component12.formMessage")}
           </p>
           <FormComponent
             onGoCom1Click={onGoCom1Click}

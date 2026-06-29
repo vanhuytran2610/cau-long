@@ -1,89 +1,54 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-import type { RootState } from "../redux/store";
-import { AGENT_URL } from "../helpers/constants";
-import { CircleArrowReload01Icon, ChatBotIcon, MaximizeScreenIcon } from "hugeicons-react";
-import type { Message, Suggestion } from "../helpers/ChatbotInterface";
-
-const STORAGE_MESSAGES_KEY = "chatbot_messages";
-const STORAGE_THREAD_KEY = "chatbot_thread_id";
+import {
+  CircleArrowReload01Icon,
+  ChatBotIcon,
+  MaximizeScreenIcon,
+} from "hugeicons-react";
+import {
+  fetchSuggestions,
+  fetchWelcome,
+  sendChatMessage,
+  resetConversation,
+  addUserMessage,
+  clearConversation,
+  setIsOpen,
+  setIsFullscreen,
+} from "../redux/chatbotSlice";
+import { useAppDispatch, type RootState } from "../redux/store";
+import { useTranslation } from "react-i18next";
 
 interface ChatBotProps {
   onRefreshNeeded?: () => void;
 }
 
+const MAX_TEXTAREA_HEIGHT = 76;
+
 const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
+  const { t } = useTranslation();
+  const dispatch = useAppDispatch();
   const token = useSelector((state: RootState) => state.auth.token);
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_MESSAGES_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [threadId, setThreadId] = useState<string | null>(() =>
-    localStorage.getItem(STORAGE_THREAD_KEY),
+  const language = useSelector((state: RootState) => state.language.language);
+  const { messages, loading, suggestions, isOpen, isFullscreen } = useSelector(
+    (state: RootState) => state.chatbot,
   );
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+
+  const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const authHeaders = {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-
-  // Persist messages to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(messages));
-  }, [messages]);
+    dispatch(fetchSuggestions());
+  }, [dispatch, language]);
 
-  // Persist threadId to localStorage whenever it changes
   useEffect(() => {
-    if (threadId) {
-      localStorage.setItem(STORAGE_THREAD_KEY, threadId);
-    } else {
-      localStorage.removeItem(STORAGE_THREAD_KEY);
+    if (!token) dispatch(clearConversation());
+  }, [token, dispatch]);
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0 && token) {
+      dispatch(fetchWelcome());
     }
-  }, [threadId]);
-
-  // Clear stored conversation when user logs out
-  useEffect(() => {
-    if (!token) {
-      setMessages([]);
-      setThreadId(null);
-      localStorage.removeItem(STORAGE_MESSAGES_KEY);
-      localStorage.removeItem(STORAGE_THREAD_KEY);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    fetch(`${AGENT_URL}/suggestions`)
-      .then((r) => r.json())
-      .then((data) => setSuggestions(data.suggestions ?? []))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen || messages.length > 0 || !token) return;
-    setLoading(true);
-    fetch(`${AGENT_URL}/welcome`, { headers: authHeaders })
-      .then((r) => r.json())
-      .then((data) => setMessages([{ role: "assistant", content: data.reply }]))
-      .catch(() =>
-        setMessages([
-          {
-            role: "assistant",
-            content: "Xin chào! Tôi có thể giúp gì cho bạn?",
-          },
-        ]),
-      )
-      .finally(() => setLoading(false));
   }, [isOpen]);
 
   useEffect(() => {
@@ -94,83 +59,43 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
   }, [isOpen]);
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim() || loading || !token) return;
-      setMessages((prev) => [...prev, { role: "user", content: text }]);
-      setInput("");
-      if (inputRef.current) inputRef.current.style.height = "auto";
-      setLoading(true);
+  const handleSend = async (text: string) => {
+    if (!text.trim() || loading || !token) return;
+    dispatch(addUserMessage(text));
+    setInput("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
+    await dispatch(sendChatMessage(text));
+    onRefreshNeeded?.();
+  };
 
-      try {
-        const res = await fetch(`${AGENT_URL}/agent`, {
-          method: "POST",
-          headers: authHeaders,
-          body: JSON.stringify({ message: text, thread_id: threadId }),
-        });
-        const data = await res.json();
-        setThreadId(data.thread_id);
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: data.reply },
-        ]);
-        onRefreshNeeded?.();
-      } catch {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "Có lỗi xảy ra. Vui lòng thử lại." },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [loading, token, threadId],
-  );
-
-  const handleReset = async () => {
+  const handleReset = () => {
     if (!token) return;
-    try {
-      const res = await fetch(`${AGENT_URL}/agent/reset`, {
-        method: "POST",
-        headers: authHeaders,
-      });
-      const data = await res.json();
-      setThreadId(data.thread_id);
-    } catch {}
-    setMessages([]);
-
-    setLoading(true);
-    fetch(`${AGENT_URL}/welcome`, { headers: authHeaders })
-      .then((r) => r.json())
-      .then((data) => setMessages([{ role: "assistant", content: data.reply }]))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    dispatch(resetConversation());
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage(input);
+      handleSend(input);
     }
   };
-
-  const MAX_TEXTAREA_HEIGHT = 76; // ~3 lines (text-sm line-height 20px × 3 + py-2 16px)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
     e.target.style.height = "auto";
     const next = Math.min(e.target.scrollHeight, MAX_TEXTAREA_HEIGHT);
     e.target.style.height = `${next}px`;
-    e.target.style.overflowY = e.target.scrollHeight > MAX_TEXTAREA_HEIGHT ? "auto" : "hidden";
+    e.target.style.overflowY =
+      e.target.scrollHeight > MAX_TEXTAREA_HEIGHT ? "auto" : "hidden";
   };
 
   return (
     <>
       {/* Floating toggle button */}
       <button
-        onClick={() => setIsOpen((o) => !o)}
+        onClick={() => dispatch(setIsOpen(!isOpen))}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-red-400 hover:bg-red-300 active:scale-95 text-black rounded-full shadow-xl flex items-center justify-center text-2xl transition-all"
-        title="Chat với AI"
+        title={t("chatbot.toggleButtonTitle")}
       >
         {isOpen ? "✕" : <ChatBotIcon size={28} />}
       </button>
@@ -197,14 +122,16 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
                 onClick={handleReset}
                 disabled={loading}
                 className="text-black hover:text-gray-700 disabled:opacity-40 transition-colors"
-                title="Cuộc trò chuyện mới"
+                title={t("chatbot.resetConversation")}
               >
                 <CircleArrowReload01Icon size={24} />
               </button>
               <button
-                onClick={() => setIsFullscreen((f) => !f)}
+                onClick={() => dispatch(setIsFullscreen(!isFullscreen))}
                 className="hidden sm:block text-black hover:text-gray-700 transition-colors"
-                title={isFullscreen ? "Thu nhỏ" : "Toàn màn hình"}
+                title={
+                  isFullscreen ? t("chatbot.minimize") : t("chatbot.maximize")
+                }
               >
                 <MaximizeScreenIcon size={22} />
               </button>
@@ -250,7 +177,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
               {suggestions.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => sendMessage(s.prompt)}
+                  onClick={() => handleSend(s.prompt)}
                   disabled={loading}
                   className="font-primaryMedium text-xs px-2.5 py-1 rounded-full border border-gray-600 text-gray-700 hover:border-red-400 hover:text-red-400 disabled:opacity-40 transition-colors"
                 >
@@ -268,12 +195,12 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Nhập tin nhắn..."
+              placeholder={t("chatbot.inputPlaceholder") || "Nhập tin nhắn..."}
               disabled={loading}
               className="flex-1 bg-gray-300 text-black font-primaryRegular text-sm rounded-xl px-3 py-2 outline-none border border-gray-600 focus:border-gray-600 placeholder-gray-500 disabled:opacity-50 transition-colors resize-none overflow-hidden"
             />
             <button
-              onClick={() => sendMessage(input)}
+              onClick={() => handleSend(input)}
               disabled={loading || !input.trim()}
               className="w-9 h-9 shrink-0 bg-red-400 hover:bg-red-300 active:scale-95 text-black rounded-xl flex items-center justify-center text-base disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >

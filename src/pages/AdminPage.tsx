@@ -24,8 +24,10 @@ import {
   QrCode01Icon,
   CheckmarkCircle03Icon,
 } from "hugeicons-react";
-import type { Category, Participant } from "../helpers/CategoryInterface";
+import type { Category, Participant } from "../interface/CategoryInterface";
 import ChatBot from "../components/ChatBot";
+import { useTranslation } from "react-i18next";
+import { setLanguage } from "../redux/languageSlice";
 
 interface Toast {
   id: string;
@@ -46,9 +48,11 @@ interface Toast {
 
 export const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const { username, logoutLoading, isAuthenticated } = useSelector(
     (state: RootState) => state.auth,
   );
+  const language = useSelector((state: RootState) => state.language.language);
   const {
     categories,
     participants,
@@ -101,7 +105,7 @@ export const AdminPage: React.FC = () => {
   // Helper function to check authentication before dispatch
   const checkAuthAndDispatch = (callback: () => void) => {
     if (!isAuthenticated) {
-      addToast("Please log in to perform this action", "error");
+      addToast(t("admin.toast.loginRequired"), "error");
       setShowAuthModal(true);
       return;
     }
@@ -183,7 +187,7 @@ export const AdminPage: React.FC = () => {
 
   const handleCreateCategory = async () => {
     if (!isAuthenticated) {
-      addToast("Please log in to create a category", "error");
+      addToast(t("admin.toast.loginToCreate"), "error");
       setShowAuthModal(true);
       return;
     }
@@ -200,14 +204,14 @@ export const AdminPage: React.FC = () => {
           setEditCategory(null);
           setNewCategoryName("");
           dispatch(fetchCategories());
-          addToast("Date created successfully!", "success");
+          addToast(t("admin.toast.dateCreated"), "success");
         } else if (createCategory.rejected.match(result)) {
           const errorMsg =
-            (result.payload as string) || "Failed to create category";
+            (result.payload as string) || t("admin.toast.createFailed");
           setCreateError(errorMsg);
         }
       } catch (err) {
-        const errorMsg = "Failed to create category";
+        const errorMsg = t("admin.toast.createFailed");
         setCreateError(errorMsg);
         addToast(errorMsg, "error");
       }
@@ -216,7 +220,7 @@ export const AdminPage: React.FC = () => {
 
   const handleUpdateCategory = async (category: Category) => {
     if (!isAuthenticated) {
-      addToast("Please log in to update a category", "error");
+      addToast(t("admin.toast.loginToUpdate"), "error");
       setShowAuthModal(true);
       return;
     }
@@ -237,14 +241,14 @@ export const AdminPage: React.FC = () => {
         setEditCategory(null);
         dispatch(fetchCategories());
         await dispatch(fetchParticipantsByCategory(category._id));
-        addToast("Date updated successfully!", "success");
+        addToast(t("admin.toast.dateUpdated"), "success");
       } else if (updateCategory.rejected.match(result)) {
         const errorMsg =
-          (result.payload as string) || "Failed to update category";
+          (result.payload as string) || t("admin.toast.updateFailed");
         setUpdateError(errorMsg);
       }
     } catch (err) {
-      const errorMsg = "Failed to update category";
+      const errorMsg = t("admin.toast.updateFailed");
       setUpdateError(errorMsg);
       addToast(errorMsg, "error");
     }
@@ -259,16 +263,16 @@ export const AdminPage: React.FC = () => {
         if (deleteCategory.fulfilled.match(result)) {
           setDeleteCategoryId(null);
           dispatch(fetchCategories());
-          addToast("Date deleted successfully!", "success");
+          addToast(t("admin.toast.dateDeleted"), "success");
         } else if (deleteCategory.rejected.match(result)) {
           setDeleteCategoryErr(
             deleteCategoryError ||
               (result.payload as string) ||
-              "Failed to delete category",
+              t("admin.toast.deleteFailed"),
           );
         }
       } catch (error: any) {
-        setDeleteCategoryErr(error?.message || "Failed to delete category");
+        setDeleteCategoryErr(error?.message || t("admin.toast.deleteFailed"));
       }
     });
   };
@@ -290,10 +294,10 @@ export const AdminPage: React.FC = () => {
         );
         if (updateParticipant.fulfilled.match(result)) {
           dispatch(storeCategoryUpDe(categoryId));
-          addToast("Cập nhật thành công!", "success");
+          addToast(t("admin.toast.updateSuccess"), "success");
         }
       } catch (error: any) {
-        addToast("Cập nhật không thành công!", "error");
+        addToast(t("admin.toast.updateError"), "error");
       }
     });
   };
@@ -311,7 +315,7 @@ export const AdminPage: React.FC = () => {
         if (calculateCategory.fulfilled.match(result)) {
           await dispatch(fetchCategories());
           await dispatch(fetchParticipantsByCategory(category._id));
-          addToast("Tính tiền thành công!", "success");
+          addToast(t("admin.toast.calculateSuccess"), "success");
         } else if (calculateCategory.rejected.match(result)) {
           setCalculateErrorMap((prev) => ({
             ...prev,
@@ -366,7 +370,7 @@ export const AdminPage: React.FC = () => {
           }),
         );
         if (exportCategory.fulfilled.match(result)) {
-          addToast("Show kết quả thành công!", "success");
+          addToast(t("admin.toast.exportSuccess"), "success");
         } else if (exportCategory.rejected.match(result)) {
           setExportErrorMap((prev) => ({
             ...prev,
@@ -431,17 +435,17 @@ export const AdminPage: React.FC = () => {
 
           // Close the modal and show success message
           setDeleteParticipantInfo(null);
-          addToast("Participant deleted successfully!", "success");
+          addToast(t("admin.toast.participantDeleted"), "success");
         } else if (deleteParticipant.rejected.match(result)) {
           const errorMsg =
-            (result.payload as string) || "Failed to delete participant";
+            (result.payload as string) || t("admin.toast.participantDeleteFailed");
           setDeleteParticipantError(errorMsg);
         }
 
         // Store the category ID for future reference
       } catch (error: any) {
         setDeleteParticipantError(
-          error?.message || "Failed to delete participant",
+          error?.message || t("admin.toast.participantDeleteFailed"),
         );
         console.error("Error deleting participant:", error);
       }
@@ -450,7 +454,7 @@ export const AdminPage: React.FC = () => {
 
   const toggleParticipants = async (categoryId: string) => {
     if (!isAuthenticated) {
-      addToast("Hãy đăng nhập để xem thông tin người tham gia", "error");
+      addToast(t("admin.toast.loginToViewParticipants"), "error");
       setShowAuthModal(true);
       return;
     }
@@ -472,17 +476,17 @@ export const AdminPage: React.FC = () => {
 
   const handleLogout = () => {
     if (!isAuthenticated) {
-      addToast("Bạn đã đăng xuất", "info");
+      addToast(t("admin.toast.alreadyLoggedOut"), "info");
       return;
     }
 
     dispatch(logout());
-    addToast("Đã đăng xuất thành công!", "info");
+    addToast(t("admin.toast.logoutSuccess"), "info");
   };
 
   useEffect(() => {
-    document.title = "Quản lý đánh cầu";
-  }, []);
+    document.title = t("admin.title");
+  }, [t]);
 
   // Show auth modal if not authenticated
   if (isAuthenticated === false) {
@@ -534,18 +538,17 @@ export const AdminPage: React.FC = () => {
                   />
                 </svg>
                 <h2 className="text-2xl font-primaryBold text-gray-900 mb-2">
-                  Xác thực cần thiết
+                  {t("admin.auth.title")}
                 </h2>
                 <p className="text-gray-600 font-primaryRegular">
-                  Bạn cần phải đăng nhập để truy cập trang này. Vui lòng đăng
-                  nhập để tiếp tục.
+                  {t("admin.auth.description")}
                 </p>
               </div>
               <button
                 onClick={redirectToLogin}
                 className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-primaryMedium rounded-lg text-sm px-5 py-3 transition-colors"
               >
-                Chuyển đến trang đăng nhập
+                {t("admin.auth.goToLogin")}
               </button>
             </div>
           </div>
@@ -637,22 +640,38 @@ export const AdminPage: React.FC = () => {
             <h1 className="text-3xl font-primaryBold">
               Hello, {username || "Admin"}
             </h1>
-            <button
-              onClick={handleLogout}
-              className="text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
-            >
-              {logoutLoading ? <Loading size="sm" /> : "Đăng xuất"}
-            </button>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center bg-gray-50 rounded-xl border-2 border-gray-200 p-0.5 text-sm font-primaryMedium">
+                <button
+                  onClick={() => dispatch(setLanguage("vi"))}
+                  className={`px-2.5 py-1 rounded-lg transition-colors ${language === "vi" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  VI
+                </button>
+                <button
+                  onClick={() => dispatch(setLanguage("en"))}
+                  className={`px-2.5 py-1 rounded-lg transition-colors ${language === "en" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  EN
+                </button>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-28 text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
+              >
+                {logoutLoading ? <Loading size="sm" /> : t("admin.logout")}
+              </button>
+            </div>
           </div>
 
           {/* Create Category Modal */}
           <div className="mb-6">
-            <h2 className="text-xl font-primaryMedium mb-2">Tạo Ngày Mới</h2>
+            <h2 className="text-xl font-primaryMedium mb-2">{t("admin.createDate.title")}</h2>
             <div className="flex space-x-4">
               <input
                 type="text"
                 className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5"
-                placeholder="Ngày 27/6, 19h30"
+                placeholder={t('admin.createDate.placeholder')}
                 value={newCategoryName}
                 onChange={handleNewCategoryChange}
               />
@@ -661,7 +680,7 @@ export const AdminPage: React.FC = () => {
                 disabled={loading}
                 className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-2 py-2.5 disabled:opacity-50 flex items-center justify-center space-x-2 min-w-28"
               >
-                {createdLoading ? <Loading size="sm" /> : "Tạo Ngày"}
+                {createdLoading ? <Loading size="sm" /> : t("admin.createDate.button")}
               </button>
             </div>
             {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
@@ -674,7 +693,7 @@ export const AdminPage: React.FC = () => {
 
           {/* Category List */}
           <h2 className="text-xl font-primaryMedium mb-4 mt-12">
-            Danh Sách Ngày Đánh Cầu
+            {t("admin.dateList.title")}
           </h2>
           <div className="space-y-4">
             {categories.map((category) => (
@@ -690,8 +709,8 @@ export const AdminPage: React.FC = () => {
                       className="text-black flex items-center justify-center"
                       title={
                         expandedCategories.includes(category._id)
-                          ? `Hiện thông tin chi tiết`
-                          : `Ẩn thông tin chi tiết`
+                          ? t('admin.dateList.showDetailInfo')
+                          : t('admin.dateList.hideDetailInfo')
                       }
                     >
                       {loadingParticipants.includes(category._id) ? (
@@ -728,7 +747,7 @@ export const AdminPage: React.FC = () => {
                             : "font-primaryRegular text-gray-600"
                         }`}
                       >
-                        {category.is_selected ? "Ngày được chọn" : "Chưa chọn"}
+                        {category.is_selected ? t("admin.dateList.selected") : t("admin.dateList.notSelected")}
                       </p>
                     </div>
                   </div>
@@ -737,13 +756,13 @@ export const AdminPage: React.FC = () => {
                       onClick={() => setEditCategory(category)}
                       className="text-black bg-yellow-400 hover:bg-yellow-500 focus:ring-2 focus:ring-yellow-300 font-primaryMedium rounded-lg text-sm px-4 py-2"
                     >
-                      Sửa
+                      {t("admin.dateList.edit")}
                     </button>
                     <button
                       onClick={() => setDeleteCategoryId(category._id)}
                       className="text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-4 py-2"
                     >
-                      Xóa
+                      {t("admin.dateList.delete")}
                     </button>
                   </div>
                   <div className="flex space-x-2 sm:hidden mr-0.5">
@@ -774,7 +793,7 @@ export const AdminPage: React.FC = () => {
                             size={20}
                             className="inline mr-1 -mt-0.5"
                           />
-                          Thông tin buổi đánh
+                          {t("admin.categoryDetail.paymentInfo")}
                         </p>
                         <textarea
                           rows={3}
@@ -791,8 +810,7 @@ export const AdminPage: React.FC = () => {
                           }
                         />
                         <p className="text-sm font-primaryRegular mt-1 text-gray-500 italic">
-                          VD: Hôm nay tiền sân là ..., tiền cầu là ... (... trái
-                          cầu, 1 trái giá ...)
+                          {t('admin.categoryDetail.examplePrompt')}
                         </p>
                         <div className="hidden sm:block">
                           {calculateErrorMap[category._id] && (
@@ -814,7 +832,7 @@ export const AdminPage: React.FC = () => {
                               {calculateLoading ? (
                                 <Loading size="sm" />
                               ) : (
-                                "Tính tiền"
+                                t("admin.categoryDetail.calculate")
                               )}
                             </button>
 
@@ -828,7 +846,7 @@ export const AdminPage: React.FC = () => {
                               ) : exportLoading ? (
                                 <Loading size="sm" />
                               ) : (
-                                "Show kết quả"
+                                t("admin.categoryDetail.showResult")
                               )}
                             </button>
                           </div>
@@ -842,7 +860,7 @@ export const AdminPage: React.FC = () => {
                             size={20}
                             className="inline mr-1 -mt-0.5"
                           />
-                          Mã QR
+                          {t("admin.categoryDetail.qrCode")}
                         </p>
                         <div>
                           {(() => {
@@ -907,7 +925,7 @@ export const AdminPage: React.FC = () => {
                             {calculateLoading ? (
                               <Loading size="sm" />
                             ) : (
-                              "Tính tiền"
+                              t("admin.categoryDetail.calculate")
                             )}
                           </button>
 
@@ -921,7 +939,7 @@ export const AdminPage: React.FC = () => {
                             ) : exportLoading ? (
                               <Loading size="sm" />
                             ) : (
-                              "Show kết quả"
+                              t("admin.categoryDetail.showResult")
                             )}
                           </button>
                         </div>
@@ -934,14 +952,14 @@ export const AdminPage: React.FC = () => {
                           size={20}
                           className="inline mr-1 mt-0.5"
                         />
-                        Chi tiết
+                        {t("admin.categoryDetail.detail")}
                       </h4>
                       <p
                         className={`font-primaryRegular mx-3.5 text-justify whitespace-pre-line ${category.paymentResult === "" ? "text-gray-500 italic" : "text-gray-700"}`}
                       >
                         {category.paymentResult !== ""
                           ? category.paymentResult
-                          : "Chưa có thông tin chi tiết"}
+                          : t("admin.categoryDetail.noDetail")}
                       </p>
                     </div>
                     <div className="mt-5 mb-1">
@@ -951,22 +969,22 @@ export const AdminPage: React.FC = () => {
                             <thead>
                               <tr className="border-b border-gray-200 text-gray-600">
                                 <th className="py-2 px-2 text-left font-primaryMedium w-10">
-                                  STT
+                                  {t("admin.table.no")}
                                 </th>
                                 <th className="py-2 px-2 text-left font-primaryMedium">
-                                  Tên
+                                  {t("admin.table.name")}
                                 </th>
                                 {/* <th className="py-2 px-2 text-left font-primaryMedium">
                                     Số lượng
                                   </th> */}
                                 <th className="py-2 px-2 text-left font-primaryMedium">
-                                  Số tiền
+                                  {t("admin.table.amount")}
                                 </th>
                                 <th className="py-2 px-2 text-center font-primaryMedium">
-                                  Đã thanh toán
+                                  {t("admin.table.isPaid")}
                                 </th>
                                 <th className="py-2 px-2 text-center font-primaryMedium">
-                                  Xóa thành viên
+                                  {t("admin.table.deleteParticipant")}
                                 </th>
                               </tr>
                             </thead>
@@ -1019,7 +1037,7 @@ export const AdminPage: React.FC = () => {
                                         }
                                         className="text-black bg-red-400 hover:bg-red-500 font-primaryMedium rounded-lg text-xs px-3 py-1.5"
                                       >
-                                        Xóa
+                                        {t("admin.dateList.delete")}
                                       </button>
                                     </td>
                                   </tr>
@@ -1047,7 +1065,7 @@ export const AdminPage: React.FC = () => {
                               </svg>
                             </div>
                             <p className="text-sm text-gray-600 font-primaryRegular">
-                              Không có người tham gia cho ngày này!!!
+                              {t("admin.table.noParticipants")}
                             </p>
                           </div>
                         </div>
@@ -1063,8 +1081,8 @@ export const AdminPage: React.FC = () => {
         {editCategory && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">Edit Date</h2>
-              <label className="font-primaryMedium">Date:</label>
+              <h2 className="text-xl font-primaryBold mb-5">{t("admin.editModal.title")}</h2>
+              <label className="font-primaryMedium">{t("admin.editModal.dateLabel")}</label>
               <input
                 type="text"
                 className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5 mb-3 mt-1"
@@ -1079,7 +1097,7 @@ export const AdminPage: React.FC = () => {
                   className="mr-2 w-4 h-4 accent-green-500"
                 />
                 <span className="text-sm">
-                  Select Date (Choose this date to vote)
+                  {t("admin.editModal.selectDate")}
                 </span>
               </label>
               {updateError && (
@@ -1091,7 +1109,7 @@ export const AdminPage: React.FC = () => {
                   disabled={loading}
                   className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 flex items-center justify-center space-x-2 min-w-[80px]"
                 >
-                  {loading ? <Loading size="sm" /> : "Save"}
+                  {loading ? <Loading size="sm" /> : t("admin.editModal.save")}
                 </button>
                 <button
                   onClick={() => {
@@ -1100,7 +1118,7 @@ export const AdminPage: React.FC = () => {
                   }}
                   className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 flex items-center justify-center"
                 >
-                  Cancel
+                  {t("admin.editModal.cancel")}
                 </button>
               </div>
             </div>
@@ -1110,9 +1128,9 @@ export const AdminPage: React.FC = () => {
         {deleteCategoryId && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">Confirm Delete</h2>
+              <h2 className="text-xl font-primaryBold mb-5">{t("admin.deleteModal.title")}</h2>
               <p className="text-sm mb-4">
-                Are you sure you want to delete this date?
+                {t("admin.deleteModal.confirmDate")}
               </p>
               {deleteCategoryErr && (
                 <p className="text-red-400 text-sm mb-4 text-center">
@@ -1125,13 +1143,13 @@ export const AdminPage: React.FC = () => {
                   disabled={loading}
                   className="text-black bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 flex items-center space-x-2 min-w-[80px]"
                 >
-                  {loading ? <Loading size="sm" /> : "Delete"}
+                  {loading ? <Loading size="sm" /> : t("admin.deleteModal.delete")}
                 </button>
                 <button
                   onClick={() => setDeleteCategoryId(null)}
                   className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
                 >
-                  Cancel
+                  {t("admin.editModal.cancel")}
                 </button>
               </div>
             </div>
@@ -1141,9 +1159,9 @@ export const AdminPage: React.FC = () => {
         {deleteParticipantInfo && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-lg mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">Confirm Delete</h2>
+              <h2 className="text-xl font-primaryBold mb-5">{t("admin.deleteModal.title")}</h2>
               <p className="text-md font-primaryMedium mb-4">
-                Are you sure you want to delete this participant?
+                {t("admin.deleteModal.confirmParticipant")}
               </p>
               {deleteParticipantError && (
                 <p className="text-red-400 text-sm mb-7 text-center">
@@ -1161,13 +1179,13 @@ export const AdminPage: React.FC = () => {
                   disabled={loading}
                   className="text-black bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50"
                 >
-                  {participantsLoading ? <Loading size="sm" /> : "Delete"}
+                  {participantsLoading ? <Loading size="sm" /> : t("admin.deleteModal.delete")}
                 </button>
                 <button
                   onClick={() => setDeleteParticipantInfo(null)}
                   className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
                 >
-                  Cancel
+                  {t("admin.editModal.cancel")}
                 </button>
               </div>
             </div>

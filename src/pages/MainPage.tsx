@@ -11,13 +11,17 @@ import { useAppDispatch, type RootState } from "../redux/store";
 import { getSelectedCategory } from "../redux/userSlice";
 import Loading from "../components/Loading";
 import { Component12 } from "../components/Component12";
+import { useTranslation } from "react-i18next";
+import { setLanguage } from "../redux/languageSlice";
 
 export const MainPage: React.FC = () => {
   const [currentComponent, setCurrentComponent] = useState("Component1");
   const { categoryId, categoryName, loadingCategory } = useSelector(
-    (state: RootState) => state.user
+    (state: RootState) => state.user,
   );
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
+  const language = useSelector((state: RootState) => state.language.language);
 
   useEffect(() => {
     dispatch(getSelectedCategory());
@@ -33,9 +37,9 @@ export const MainPage: React.FC = () => {
 
   useEffect(() => {
     if (categoryName) {
-      document.title = `Cầu lông ${categoryName}`;
+      document.title = t("mainPage.title", { categoryName });
     }
-  }, [categoryName]);
+  }, [categoryName, t]);
 
   const caseComponent = () => {
     switch (currentComponent) {
@@ -115,6 +119,20 @@ export const MainPage: React.FC = () => {
 
   return (
     <div className="relative">
+      <div className="fixed top-4 right-4 z-50 flex items-center bg-gray-50 rounded-xl border-2 border-gray-200 p-0.5 text-sm font-primaryMedium">
+        <button
+          onClick={() => dispatch(setLanguage("vi"))}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${language === "vi" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
+        >
+          VI
+        </button>
+        <button
+          onClick={() => dispatch(setLanguage("en"))}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${language === "en" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
+        >
+          EN
+        </button>
+      </div>
       <div
         className={`flex justify-center transition-opacity duration-300 ${
           loadingCategory ? "pointer-events-none" : "opacity-100"

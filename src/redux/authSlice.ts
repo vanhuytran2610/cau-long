@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
+// import axios from "axios";
+import axiosInstance from "../helpers/axiosInstance";
 import type { RootState } from "./store";
 import { API_URL } from "../helpers/constants";
-import type { AuthState, LoginCredentials, LoginResponse, LogoutResponse } from "../helpers/AuthInterface";
+import type { AuthState, LoginCredentials, LoginResponse, LogoutResponse } from "../interface/AuthInterface";
 
 
 
@@ -57,7 +58,7 @@ export const login = createAsyncThunk<LoginResponse, LoginCredentials>(
   "auth/login",
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `${API_URL}/api/admin/login`,
         credentials
       );
@@ -75,7 +76,7 @@ export const logout = createAsyncThunk<
 >("auth/logout", async (_, { getState, rejectWithValue }) => {
   const { auth } = getState() as { auth: AuthState };
   try {
-    const response = await axios.post(
+    const response = await axiosInstance.post(
       `${API_URL}/api/admin/logout`,
       {},
       {
@@ -95,7 +96,7 @@ export const checkAuth = createAsyncThunk(
     const token = state.auth.token;
 
     try {
-      const response = await axios.get("/api/admin/check-auth", {
+      const response = await axiosInstance.get("/api/admin/check-auth", {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;

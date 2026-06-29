@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { useAppDispatch, type RootState } from "../redux/store";
 import { useNavigate } from "react-router";
 import Loading from "../components/Loading";
+import { useTranslation } from "react-i18next";
 
 export const LoginPage: React.FC = () => {
   const [username, setUsername] = useState<string>("");
@@ -12,8 +13,9 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { error, loading } = useSelector((state: RootState) => state.auth);
   const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.isAuthenticated
+    (state: RootState) => state.auth.isAuthenticated,
   );
+  const { t } = useTranslation();
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) {
@@ -58,14 +60,14 @@ export const LoginPage: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    document.title = "Login";
+    document.title = t("login.title");
   }, []);
 
   return (
     <div className="my-36 flex items-center justify-center">
       <div className="max-w-md w-full px-2 sm:px-2 md:px-4 lg:px-6 xl:px-6 2xl:px-8">
         <h1 className="text-2xl font-primaryBold text-center mb-6">
-          Admin Login
+          {t("login.header")}
         </h1>
         <div className="mb-5">
           <input
@@ -95,7 +97,7 @@ export const LoginPage: React.FC = () => {
           disabled={loading}
           className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:outline-none focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-full px-5 py-2.5 text-center disabled:opacity-50"
         >
-          {loading ? <Loading size="sm" /> : "Login"}
+          {loading ? <Loading size="sm" /> : t("login.loginButton")}
         </button>
       </div>
     </div>

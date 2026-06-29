@@ -8,6 +8,7 @@ import {
 import { fetchUserCategories } from "../redux/userSlice";
 import { useAppDispatch, type RootState } from "../redux/store";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 
 export const UserExpensePage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -17,9 +18,10 @@ export const UserExpensePage: React.FC = () => {
     userCategoriesError: error,
   } = useSelector((state: RootState) => state.user);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const { t } = useTranslation();
 
   useEffect(() => {
-    document.title = "Chi phí";
+    document.title = t('expense.title');
     dispatch(fetchUserCategories());
   }, [dispatch]);
 
@@ -51,10 +53,10 @@ export const UserExpensePage: React.FC = () => {
     <div className="my-16 flex justify-center">
       <div className="max-w-4xl w-full px-2 sm:px-2 md:px-4 lg:px-6 xl:px-6 2xl:px-8">
         <div className="mb-16 pb-4 border-b-2 border-gray-500 flex items-center justify-between">
-          <h1 className="text-3xl font-primaryBold">Chi phí</h1>
+          <h1 className="text-3xl font-primaryBold">{t('expense.title')}</h1>
           <button className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-md px-5 py-2.5">
             <Link to="/" className="flex items-center justify-center">
-              Trang chủ
+              {t('formComponent.homepage')}
             </Link>
           </button>
         </div>
@@ -109,7 +111,7 @@ export const UserExpensePage: React.FC = () => {
                               size={20}
                               className="inline mr-1 -mt-0.5"
                             />
-                            Thông tin buổi đánh
+                            {t('expense.categoryInfo')}
                           </p>
                           <p className="text-md font-primaryRegular text-gray-700 whitespace-pre-line mx-3">
                             {category.paymentInfo}
@@ -138,14 +140,14 @@ export const UserExpensePage: React.FC = () => {
                         size={20}
                         className="inline mr-1 mt-0.5"
                       />
-                      Chi tiết
+                      {t('expense.detail')}
                     </h4>
                     <p
                       className={`font-primaryRegular mx-3 text-justify whitespace-pre-line ${category.paymentResult === "" ? "text-gray-500 italic" : "text-gray-700"}`}
                     >
                       {category.paymentResult !== ""
                         ? category.paymentResult
-                        : "Chưa có thông tin chi tiết"}
+                        : t('expense.noDetail')}
                     </p>
                   </div>
                   <div className="mt-5 mb-1">
@@ -156,19 +158,19 @@ export const UserExpensePage: React.FC = () => {
                             <thead>
                               <tr className="border-b border-gray-200 text-gray-600">
                                 <th className="py-2 px-2 text-left font-primaryMedium w-10">
-                                  STT
+                                  {t('expense.no1Table')}
                                 </th>
                                 <th className="py-2 px-2 text-left font-primaryMedium">
-                                  Tên
+                                  {t('expense.nameTable')}
                                 </th>
                                 {/* <th className="py-2 px-2 text-left font-primaryMedium">
                                   Số lượng
                                 </th> */}
                                 <th className="py-2 px-2 text-left font-primaryMedium">
-                                  Số tiền
+                                  {t('expense.moneyTable')}
                                 </th>
                                 <th className="py-2 px-2 text-center font-primaryMedium">
-                                  Đã thanh toán
+                                  {t('expense.isPaidTable')}
                                 </th>
                               </tr>
                             </thead>
@@ -232,7 +234,7 @@ export const UserExpensePage: React.FC = () => {
                             </svg>
                           </div>
                           <p className="text-sm text-gray-600 font-primaryRegular">
-                            Không có người tham gia nào
+                            {t('expense.noParticipant')}
                           </p>
                         </div>
                       </div>
@@ -245,7 +247,7 @@ export const UserExpensePage: React.FC = () => {
 
           {categories.length === 0 && (
             <p className="text-center text-gray-500 font-primaryRegular py-12">
-              Không có ngày nào.
+              {t('expense.noCategory')}
             </p>
           )}
         </div>

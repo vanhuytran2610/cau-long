@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
+// import axios from "axios";
+import axiosInstance from "../helpers/axiosInstance";
 import { API_URL } from "../helpers/constants";
 import type { RootState } from "./store";
-import type { FetchUserCategoriesResponse, GetSelectedCategoryResponse, SubmitUserPayload, SubmitUserResponse, UserState } from "../helpers/UserInterface";
+import type { FetchUserCategoriesResponse, GetSelectedCategoryResponse, SubmitUserPayload, SubmitUserResponse, UserState } from "../interface/UserInterface";
 
 const initialState: UserState = {
   username: null,
@@ -26,7 +27,7 @@ export const submitUser = createAsyncThunk<
   SubmitUserPayload
 >("user/submitUser", async (payload, { rejectWithValue }) => {
   try {
-    const response = await axios.post(`${API_URL}/api/participants`, payload);
+    const response = await axiosInstance.post(`${API_URL}/api/participants`, payload);
     return response.data;
   } catch (error: any) {
     return rejectWithValue(
@@ -40,7 +41,7 @@ export const fetchUserCategories = createAsyncThunk<
   void
 >("user/fetchUserCategories", async (_, { rejectWithValue }) => {
   try {
-    const response = await axios.get(`${API_URL}/api/user/categories`);
+    const response = await axiosInstance.get(`${API_URL}/api/user/categories`);
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) {
@@ -58,7 +59,7 @@ export const getSelectedCategory = createAsyncThunk<
   { state: RootState }
 >("category/loadCategories", async (_, { rejectWithValue }) => {
   try {
-    const response = await axios.get(`${API_URL}/api/user/category`);
+    const response = await axiosInstance.get(`${API_URL}/api/user/category`);
     return response.data;
   } catch (error: any) {
     return rejectWithValue(

@@ -2,6 +2,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import userReducer from "./userSlice";
 import categoryReducer from "./categorySlice";
+import chatbotReducer from "./chatbotSlice";
+import languageReducer from "./languageSlice";
 import { useDispatch } from "react-redux";
 
 export const store = configureStore({
@@ -9,6 +11,8 @@ export const store = configureStore({
     auth: authReducer,
     user: userReducer,
     category: categoryReducer,
+    chatbot: chatbotReducer,
+    language: languageReducer,
   },
 });
 
