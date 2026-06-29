@@ -23,6 +23,8 @@ import {
   InformationDiamondIcon,
   QrCode01Icon,
   CheckmarkCircle03Icon,
+  LogoutSquare01Icon,
+  AddCircleIcon,
 } from "hugeicons-react";
 import type { Category, Participant } from "../interface/CategoryInterface";
 import ChatBot from "../components/ChatBot";
@@ -438,7 +440,8 @@ export const AdminPage: React.FC = () => {
           addToast(t("admin.toast.participantDeleted"), "success");
         } else if (deleteParticipant.rejected.match(result)) {
           const errorMsg =
-            (result.payload as string) || t("admin.toast.participantDeleteFailed");
+            (result.payload as string) ||
+            t("admin.toast.participantDeleteFailed");
           setDeleteParticipantError(errorMsg);
         }
 
@@ -640,7 +643,7 @@ export const AdminPage: React.FC = () => {
             <h1 className="text-3xl font-primaryBold">
               Hello, {username || "Admin"}
             </h1>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <div className="flex items-center bg-gray-50 rounded-xl border-2 border-gray-200 p-0.5 text-sm font-primaryMedium">
                 <button
                   onClick={() => dispatch(setLanguage("vi"))}
@@ -657,30 +660,50 @@ export const AdminPage: React.FC = () => {
               </div>
               <button
                 onClick={handleLogout}
-                className="w-28 text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
+                className="text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-3 py-2.5 sm:w-28 sm:px-5"
               >
-                {logoutLoading ? <Loading size="sm" /> : t("admin.logout")}
+                {logoutLoading ? (
+                  <Loading size="sm" />
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">
+                      {t("admin.logout")}
+                    </span>
+                    <LogoutSquare01Icon className="sm:hidden" size={18} />
+                  </>
+                )}
               </button>
             </div>
           </div>
 
           {/* Create Category Modal */}
           <div className="mb-6">
-            <h2 className="text-xl font-primaryMedium mb-2">{t("admin.createDate.title")}</h2>
-            <div className="flex space-x-4">
+            <h2 className="text-xl font-primaryMedium mb-2">
+              {t("admin.createDate.title")}
+            </h2>
+            <div className="flex space-x-2">
               <input
                 type="text"
                 className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5"
-                placeholder={t('admin.createDate.placeholder')}
+                placeholder={t("admin.createDate.placeholder")}
                 value={newCategoryName}
                 onChange={handleNewCategoryChange}
               />
               <button
                 onClick={handleCreateCategory}
                 disabled={loading}
-                className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-2 py-2.5 disabled:opacity-50 flex items-center justify-center space-x-2 min-w-28"
+                className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-2 py-2.5 disabled:opacity-50 flex items-center justify-center min-w-12 sm:w-28"
               >
-                {createdLoading ? <Loading size="sm" /> : t("admin.createDate.button")}
+                {createdLoading ? (
+                  <Loading size="sm" />
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">
+                      {t("admin.createDate.button")}
+                    </span>
+                    <AddCircleIcon className="sm:hidden" size={18} />
+                  </>
+                )}
               </button>
             </div>
             {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
@@ -709,8 +732,8 @@ export const AdminPage: React.FC = () => {
                       className="text-black flex items-center justify-center"
                       title={
                         expandedCategories.includes(category._id)
-                          ? t('admin.dateList.showDetailInfo')
-                          : t('admin.dateList.hideDetailInfo')
+                          ? t("admin.dateList.showDetailInfo")
+                          : t("admin.dateList.hideDetailInfo")
                       }
                     >
                       {loadingParticipants.includes(category._id) ? (
@@ -747,7 +770,9 @@ export const AdminPage: React.FC = () => {
                             : "font-primaryRegular text-gray-600"
                         }`}
                       >
-                        {category.is_selected ? t("admin.dateList.selected") : t("admin.dateList.notSelected")}
+                        {category.is_selected
+                          ? t("admin.dateList.selected")
+                          : t("admin.dateList.notSelected")}
                       </p>
                     </div>
                   </div>
@@ -810,7 +835,7 @@ export const AdminPage: React.FC = () => {
                           }
                         />
                         <p className="text-sm font-primaryRegular mt-1 text-gray-500 italic">
-                          {t('admin.categoryDetail.examplePrompt')}
+                          {t("admin.categoryDetail.examplePrompt")}
                         </p>
                         <div className="hidden sm:block">
                           {calculateErrorMap[category._id] && (
@@ -1081,8 +1106,12 @@ export const AdminPage: React.FC = () => {
         {editCategory && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">{t("admin.editModal.title")}</h2>
-              <label className="font-primaryMedium">{t("admin.editModal.dateLabel")}</label>
+              <h2 className="text-xl font-primaryBold mb-5">
+                {t("admin.editModal.title")}
+              </h2>
+              <label className="font-primaryMedium">
+                {t("admin.editModal.dateLabel")}
+              </label>
               <input
                 type="text"
                 className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5 mb-3 mt-1"
@@ -1128,7 +1157,9 @@ export const AdminPage: React.FC = () => {
         {deleteCategoryId && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">{t("admin.deleteModal.title")}</h2>
+              <h2 className="text-xl font-primaryBold mb-5">
+                {t("admin.deleteModal.title")}
+              </h2>
               <p className="text-sm mb-4">
                 {t("admin.deleteModal.confirmDate")}
               </p>
@@ -1143,7 +1174,11 @@ export const AdminPage: React.FC = () => {
                   disabled={loading}
                   className="text-black bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 flex items-center space-x-2 min-w-[80px]"
                 >
-                  {loading ? <Loading size="sm" /> : t("admin.deleteModal.delete")}
+                  {loading ? (
+                    <Loading size="sm" />
+                  ) : (
+                    t("admin.deleteModal.delete")
+                  )}
                 </button>
                 <button
                   onClick={() => setDeleteCategoryId(null)}
@@ -1159,7 +1194,9 @@ export const AdminPage: React.FC = () => {
         {deleteParticipantInfo && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white p-6 rounded-lg mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">{t("admin.deleteModal.title")}</h2>
+              <h2 className="text-xl font-primaryBold mb-5">
+                {t("admin.deleteModal.title")}
+              </h2>
               <p className="text-md font-primaryMedium mb-4">
                 {t("admin.deleteModal.confirmParticipant")}
               </p>
@@ -1179,7 +1216,11 @@ export const AdminPage: React.FC = () => {
                   disabled={loading}
                   className="text-black bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50"
                 >
-                  {participantsLoading ? <Loading size="sm" /> : t("admin.deleteModal.delete")}
+                  {participantsLoading ? (
+                    <Loading size="sm" />
+                  ) : (
+                    t("admin.deleteModal.delete")
+                  )}
                 </button>
                 <button
                   onClick={() => setDeleteParticipantInfo(null)}

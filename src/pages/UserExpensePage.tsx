@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Loading from "../components/Loading";
-import { InformationDiamondIcon, CheckmarkCircle03Icon } from "hugeicons-react";
+import {
+  InformationDiamondIcon,
+  CheckmarkCircle03Icon,
+  Home09Icon,
+} from "hugeicons-react";
 import { fetchUserCategories } from "../redux/userSlice";
 import { useAppDispatch, type RootState } from "../redux/store";
 import { Link } from "react-router";
@@ -53,7 +57,7 @@ export const UserExpensePage: React.FC = () => {
       <div className="max-w-4xl w-full px-2 sm:px-2 md:px-4 lg:px-6 xl:px-6 2xl:px-8">
         <div className="mb-16 pb-4 border-b-2 border-gray-500 flex items-center justify-between">
           <h1 className="text-3xl font-primaryBold">{t("expense.title")}</h1>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <div className="flex items-center bg-gray-50 rounded-xl border-2 border-gray-200 p-0.5 text-sm font-primaryMedium">
               <button
                 onClick={() => dispatch(setLanguage("vi"))}
@@ -68,15 +72,20 @@ export const UserExpensePage: React.FC = () => {
                 EN
               </button>
             </div>
-            <button className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-md px-5 py-2.5">
+            <button className="min-w-12 sm:w-28 text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-md px-3 py-2.5">
               <Link to="/" className="flex items-center justify-center">
-                {t("formComponent.homepage")}
+                <nav className="hidden sm:inline">
+                  {t("formComponent.homepage")}
+                </nav>
+                <Home09Icon className="sm:hidden" size={18} />
               </Link>
             </button>
           </div>
         </div>
 
-        <h2 className="text-xl font-primaryMedium mb-4">{t('expense.listCategories')}</h2>
+        <h2 className="text-xl font-primaryMedium mb-4">
+          {t("expense.listCategories")}
+        </h2>
         <div className="space-y-4">
           {categories.map((category) => (
             <div
