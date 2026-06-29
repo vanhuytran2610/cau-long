@@ -13,6 +13,7 @@ import {
   calculateCategory,
   exportCategory,
   uploadQrImage,
+  addParticipant,
 } from "../redux/categorySlice";
 import { logout } from "../redux/authSlice"; // Assuming checkAuth action is added
 import { useAppDispatch, type RootState } from "../redux/store";
@@ -25,6 +26,7 @@ import {
   CheckmarkCircle03Icon,
   LogoutSquare01Icon,
   AddCircleIcon,
+  AddTeamIcon
 } from "hugeicons-react";
 import type { Category, Participant } from "../interface/CategoryInterface";
 import ChatBot from "../components/ChatBot";
@@ -78,6 +80,9 @@ export const AdminPage: React.FC = () => {
     participantId: string;
     categoryId: string;
   } | null>(null);
+  const [addParticipantCategoryId, setAddParticipantCategoryId] = useState<string | null>(null);
+  const [newParticipantName, setNewParticipantName] = useState("");
+  const [addParticipantError, setAddParticipantError] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
   const [deleteParticipantError, setDeleteParticipantError] = useState<
@@ -414,6 +419,26 @@ export const AdminPage: React.FC = () => {
       delete next[categoryId];
       return next;
     });
+  };
+
+  const handleAddParticipant = async () => {
+    if (!addParticipantCategoryId || !newParticipantName.trim()) return;
+    setAddParticipantError(null);
+    try {
+      const result = await dispatch(
+        addParticipant({ categoryId: addParticipantCategoryId, name: newParticipantName.trim(), status: "tham gia", quantity: 1 }),
+      );
+      if (addParticipant.fulfilled.match(result)) {
+        await dispatch(fetchParticipantsByCategory(addParticipantCategoryId));
+        setNewParticipantName("");
+        setAddParticipantCategoryId(null);
+        addToast(t("admin.toast.participantAdded"), "success");
+      } else if (addParticipant.rejected.match(result)) {
+        setAddParticipantError((result.payload as string) || t("admin.toast.participantAddFailed"));
+      }
+    } catch {
+      setAddParticipantError(t("admin.toast.participantAddFailed"));
+    }
   };
 
   const handleDeleteParticipant = async (
@@ -776,21 +801,13 @@ export const AdminPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="sm:flex space-x-2 hidden mr-0.5">
+                  <div className="flex space-x-2 mr-0.5">
                     <button
-                      onClick={() => setEditCategory(category)}
-                      className="text-black bg-yellow-400 hover:bg-yellow-500 focus:ring-2 focus:ring-yellow-300 font-primaryMedium rounded-lg text-sm px-4 py-2"
+                      onClick={() => setAddParticipantCategoryId(category._id)}
+                      className="text-black w-10 h-10 bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-green-300 font-primaryMedium rounded-lg text-sm flex items-center justify-center"
                     >
-                      {t("admin.dateList.edit")}
+                      <AddTeamIcon size={18} />
                     </button>
-                    <button
-                      onClick={() => setDeleteCategoryId(category._id)}
-                      className="text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-4 py-2"
-                    >
-                      {t("admin.dateList.delete")}
-                    </button>
-                  </div>
-                  <div className="flex space-x-2 sm:hidden mr-0.5">
                     <button
                       onClick={() => setEditCategory(category)}
                       className="text-black w-10 h-10 bg-yellow-400 hover:bg-yellow-500 focus:ring-2 focus:ring-yellow-300 font-primaryMedium rounded-lg text-sm flex items-center justify-center"
@@ -852,7 +869,7 @@ export const AdminPage: React.FC = () => {
                             <button
                               onClick={() => handleCalculate(category)}
                               disabled={calculateLoading}
-                              className="mt-3 text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
+                              className="mt-3 text-black bg-yellow-400 hover:bg-yellow-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
                             >
                               {calculateLoading ? (
                                 <Loading size="sm" />
@@ -945,7 +962,7 @@ export const AdminPage: React.FC = () => {
                           <button
                             onClick={() => handleCalculate(category)}
                             disabled={calculateLoading}
-                            className="mt-3 text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
+                            className="mt-3 text-black bg-yellow-400 hover:bg-yellow-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
                           >
                             {calculateLoading ? (
                               <Loading size="sm" />
@@ -1190,6 +1207,42 @@ export const AdminPage: React.FC = () => {
             </div>
           </div>
         )}
+        {/* Add Participant Modal */}
+        {addParticipantCategoryId && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
+              <h3 className="text-lg font-primaryBold mb-4">{t("admin.addParticipantModal.title")}</h3>
+              <input
+                type="text"
+                value={newParticipantName}
+                onChange={(e) => setNewParticipantName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddParticipant()}
+                placeholder={t("admin.addParticipantModal.placeholder")}
+                className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5 mb-3"
+                autoFocus
+              />
+              {addParticipantError && (
+                <p className="text-red-500 text-sm mb-3">{addParticipantError}</p>
+              )}
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={handleAddParticipant}
+                  disabled={participantsLoading || !newParticipantName.trim()}
+                  className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-green-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50"
+                >
+                  {participantsLoading ? <Loading size="sm" /> : t("admin.addParticipantModal.confirm")}
+                </button>
+                <button
+                  onClick={() => { setAddParticipantCategoryId(null); setNewParticipantName(""); setAddParticipantError(null); }}
+                  className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
+                >
+                  {t("admin.addParticipantModal.cancel")}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Delete Participant Modal */}
         {deleteParticipantInfo && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">

@@ -119,6 +119,28 @@ export interface ListParticipantsResponse {
   data: IListParticipantsResponse;
 }
 
+export interface AddParticipantPayload {
+  name: string;
+  status: "tham gia" | "lần sau";
+  quantity: number;
+  categoryId: string;
+}
+
+export interface AddParticipantResponse {
+  statusCode: number;
+  message: string;
+  data: {
+    name: string;
+    status: "tham gia" | "lần sau";
+    category: Category;
+    quantity: number;
+    money: number;
+    isPaid: boolean;
+    _id: string;
+    __v: number;
+  }
+}
+
 export interface UpdateParticipantPayload {
   categoryId: string;
   participantId: string;

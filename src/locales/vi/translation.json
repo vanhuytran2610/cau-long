@@ -90,6 +90,7 @@
             "title": "Danh Sách Ngày Đánh Cầu",
             "selected": "Ngày được chọn",
             "notSelected": "Chưa chọn",
+            "addParticipant": "Thêm thành viên",
             "edit": "Sửa",
             "delete": "Xóa",
             "showDetailInfo": "Hiện thông tin chi tiết",
@@ -137,6 +138,8 @@
             "updateError": "Cập nhật không thành công!",
             "calculateSuccess": "Tính tiền thành công!",
             "exportSuccess": "Show kết quả thành công!",
+            "participantAdded": "Thêm thành viên thành công!",
+            "participantAddFailed": "Thêm thành viên không thành công!",
             "participantDeleted": "Xóa thành viên thành công!",
             "participantDeleteFailed": "Xóa thành viên không thành công!",
             "loginToViewParticipants": "Hãy đăng nhập để xem thông tin người tham gia",
@@ -144,6 +147,12 @@
             "logoutSuccess": "Đã đăng xuất thành công!",
             "loginToCreate": "Hãy đăng nhập để tạo ngày",
             "loginToUpdate": "Hãy đăng nhập để cập nhật ngày"
+        },
+        "addParticipantModal": {
+            "title": "Thêm thành viên",
+            "placeholder": "Nhập tên thành viên",
+            "confirm": "Thêm",
+            "cancel": "Hủy"
         }
     }
 }

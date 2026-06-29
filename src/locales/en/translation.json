@@ -90,6 +90,7 @@
             "title": "Badminton Sessions",
             "selected": "Selected date",
             "notSelected": "Not selected",
+            "addParticipant": "Add participant",
             "edit": "Edit",
             "delete": "Delete",
             "showDetailInfo": "Show details",
@@ -137,6 +138,8 @@
             "updateError": "Update failed!",
             "calculateSuccess": "Calculation successful!",
             "exportSuccess": "Result shown successfully!",
+            "participantAdded": "Participant added successfully!",
+            "participantAddFailed": "Failed to add participant",
             "participantDeleted": "Participant removed successfully!",
             "participantDeleteFailed": "Failed to remove participant",
             "loginToViewParticipants": "Please log in to view participants",
@@ -144,6 +147,12 @@
             "logoutSuccess": "Logged out successfully!",
             "loginToCreate": "Please log in to create a date",
             "loginToUpdate": "Please log in to update a date"
+        },
+        "addParticipantModal": {
+            "title": "Add Participant",
+            "placeholder": "Enter participant name",
+            "confirm": "Add",
+            "cancel": "Cancel"
         }
     }
 }

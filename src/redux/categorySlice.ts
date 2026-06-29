@@ -3,9 +3,31 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 // import axios from "axios";
 import axiosInstance from "../helpers/axiosInstance";
 import type { RootState } from "./store";
-import { API_URL, CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from "../helpers/constants";
+import {
+  API_URL,
+  CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_UPLOAD_PRESET,
+} from "../helpers/constants";
 import { removeAuthFromStorage } from "./authSlice";
-import type { CalculateCategoryPayload, CalculateCategoryResponse, CategoryState, CreateCategoryPayload, CreateCategoryResponse, DeleteParticipantResponse, ExportCategoryPayload, ExportCategoryResponse, ListCategoriesResponse, ListParticipantsResponse, UpdateCategoryPayload, UpdateCategoryResponse, UpdateParticipantPayload, UpdateParticipantResponse, UploadQrResponse } from "../interface/CategoryInterface";
+import type {
+  AddParticipantPayload,
+  AddParticipantResponse,
+  CalculateCategoryPayload,
+  CalculateCategoryResponse,
+  CategoryState,
+  CreateCategoryPayload,
+  CreateCategoryResponse,
+  DeleteParticipantResponse,
+  ExportCategoryPayload,
+  ExportCategoryResponse,
+  ListCategoriesResponse,
+  ListParticipantsResponse,
+  UpdateCategoryPayload,
+  UpdateCategoryResponse,
+  UpdateParticipantPayload,
+  UpdateParticipantResponse,
+  UploadQrResponse,
+} from "../interface/CategoryInterface";
 
 const initialState: CategoryState = {
   categories: [],
@@ -28,13 +50,17 @@ export const createCategory = createAsyncThunk<
 >("category/createCategory", async (payload, { getState, rejectWithValue }) => {
   const { auth } = getState() as { auth: { token: string | null } };
   try {
-    const response = await axiosInstance.post(`${API_URL}/api/categories`, payload, {
-      headers: { Authorization: `Bearer ${auth.token}` },
-    });
+    const response = await axiosInstance.post(
+      `${API_URL}/api/categories`,
+      payload,
+      {
+        headers: { Authorization: `Bearer ${auth.token}` },
+      },
+    );
     return response.data;
   } catch (error: any) {
     return rejectWithValue(
-      error.response?.data?.message || "Failed to create category"
+      error.response?.data?.message || "Failed to create category",
     );
   }
 });
@@ -54,12 +80,12 @@ export const updateCategory = createAsyncThunk<
       },
       {
         headers: { Authorization: `Bearer ${auth.token}` },
-      }
+      },
     );
     return response.data;
   } catch (error: any) {
     return rejectWithValue(
-      error.response?.data?.message || "Failed to update category"
+      error.response?.data?.message || "Failed to update category",
     );
   }
 });
@@ -71,13 +97,16 @@ export const deleteCategory = createAsyncThunk<
 >("category/deleteCategory", async (id, { getState, rejectWithValue }) => {
   const { auth } = getState() as { auth: { token: string | null } };
   try {
-    const response = await axiosInstance.delete(`${API_URL}/api/categories/${id}`, {
-      headers: { Authorization: `Bearer ${auth.token}` },
-    });
+    const response = await axiosInstance.delete(
+      `${API_URL}/api/categories/${id}`,
+      {
+        headers: { Authorization: `Bearer ${auth.token}` },
+      },
+    );
     return response.data;
   } catch (error: any) {
     return rejectWithValue(
-      error.response?.data?.message || "Failed to delete category"
+      error.response?.data?.message || "Failed to delete category",
     );
   }
 });
@@ -95,7 +124,7 @@ export const fetchCategories = createAsyncThunk<
     return response.data;
   } catch (error: any) {
     return rejectWithValue(
-      error.response?.data?.message || "Failed to fetch categories"
+      error.response?.data?.message || "Failed to fetch categories",
     );
   }
 });
@@ -113,16 +142,36 @@ export const fetchParticipantsByCategory = createAsyncThunk<
         `${API_URL}/api/participants/${categoryId}`,
         {
           headers: { Authorization: `Bearer ${auth.token}` },
-        }
+        },
       );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch participants"
+        error.response?.data?.message || "Failed to fetch participants",
       );
     }
-  }
+  },
 );
+
+export const addParticipant = createAsyncThunk<
+  AddParticipantResponse,
+  AddParticipantPayload,
+  { state: RootState }
+>("category/addParticipant", async (payload, { getState, rejectWithValue }) => {
+  const { auth } = getState() as { auth: { token: string | null } };
+  try {
+    const response = await axiosInstance.post(
+      `${API_URL}/api/participants/${payload.categoryId}`,
+      { name: payload.name, status: payload.status },
+      { headers: { Authorization: `Bearer ${auth.token}` } },
+    );
+    return response.data;
+  } catch (err: any) {
+    return rejectWithValue(
+      err.response?.data?.message || "Failed to add participant",
+    );
+  }
+});
 
 export const updateParticipant = createAsyncThunk<
   UpdateParticipantResponse,
@@ -138,15 +187,15 @@ export const updateParticipant = createAsyncThunk<
         { isPaid: payload.isPaid },
         {
           headers: { Authorization: `Bearer ${auth.token}` },
-        }
+        },
       );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update participant"
+        error.response?.data?.message || "Failed to update participant",
       );
     }
-  }
+  },
 );
 
 export const deleteParticipant = createAsyncThunk<
@@ -162,15 +211,15 @@ export const deleteParticipant = createAsyncThunk<
         `${API_URL}/api/participants/${categoryId}/${participantId}`,
         {
           headers: { Authorization: `Bearer ${auth.token}` },
-        }
+        },
       );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to delete participant"
+        error.response?.data?.message || "Failed to delete participant",
       );
     }
-  }
+  },
 );
 
 export const calculateCategory = createAsyncThunk<
@@ -185,44 +234,38 @@ export const calculateCategory = createAsyncThunk<
       const response = await axiosInstance.post(
         `${API_URL}/api/categories/${payload.id}/calculate`,
         { paymentInfo: payload.paymentInfo },
-        { headers: { Authorization: `Bearer ${auth.token}` } }
+        { headers: { Authorization: `Bearer ${auth.token}` } },
       );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to calculate expenses"
+        error.response?.data?.message || "Failed to calculate expenses",
       );
     }
-  }
+  },
 );
 
 export const exportCategory = createAsyncThunk<
   ExportCategoryResponse,
   ExportCategoryPayload,
   { state: RootState }
->(
-  "category/exportCategory",
-  async (payload, { getState, rejectWithValue }) => {
-    const { auth } = getState() as { auth: { token: string | null } };
-    try {
-      const response = await axiosInstance.put(
-        `${API_URL}/api/categories/${payload.id}/export`,
-        { qr_img_url: payload.qr_img_url, qr_img_name: payload.qr_img_name },
-        { headers: { Authorization: `Bearer ${auth.token}` } }
-      );
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to export category"
-      );
-    }
+>("category/exportCategory", async (payload, { getState, rejectWithValue }) => {
+  const { auth } = getState() as { auth: { token: string | null } };
+  try {
+    const response = await axiosInstance.put(
+      `${API_URL}/api/categories/${payload.id}/export`,
+      { qr_img_url: payload.qr_img_url, qr_img_name: payload.qr_img_name },
+      { headers: { Authorization: `Bearer ${auth.token}` } },
+    );
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to export category",
+    );
   }
-);
+});
 
-export const uploadQrImage = createAsyncThunk<
-  UploadQrResponse,
-  File
->(
+export const uploadQrImage = createAsyncThunk<UploadQrResponse, File>(
   "category/uploadQrImage",
   async (file, { rejectWithValue }) => {
     try {
@@ -231,15 +274,15 @@ export const uploadQrImage = createAsyncThunk<
       formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
       const response = await axiosInstance.post(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-        formData
+        formData,
       );
       return response.data as UploadQrResponse;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.error?.message || "Failed to upload image"
+        error.response?.data?.error?.message || "Failed to upload image",
       );
     }
-  }
+  },
 );
 
 const categorySlice = createSlice({
@@ -264,7 +307,7 @@ const categorySlice = createSlice({
         (state, action: PayloadAction<CreateCategoryResponse>) => {
           state.createdLoading = false;
           state.categories.push(action.payload.data);
-        }
+        },
       )
       .addCase(createCategory.rejected, (state, action) => {
         state.createdLoading = false;
@@ -279,12 +322,12 @@ const categorySlice = createSlice({
         (state, action: PayloadAction<UpdateCategoryResponse>) => {
           state.loading = false;
           const index = state.categories.findIndex(
-            (cat) => cat._id === action.payload.data._id
+            (cat) => cat._id === action.payload.data._id,
           );
           if (index !== -1) {
             state.categories[index] = action.payload.data;
           }
-        }
+        },
       )
       .addCase(updateCategory.rejected, (state, action) => {
         state.loading = false;
@@ -299,10 +342,10 @@ const categorySlice = createSlice({
         (state, action: PayloadAction<UpdateCategoryResponse>) => {
           state.loading = false;
           state.categories = state.categories.filter(
-            (cat) => cat._id !== action.payload.data._id
+            (cat) => cat._id !== action.payload.data._id,
           );
           delete state.participants[action.payload.data._id];
-        }
+        },
       )
       .addCase(deleteCategory.rejected, (state, action) => {
         state.loading = false;
@@ -317,7 +360,7 @@ const categorySlice = createSlice({
         (state, action: PayloadAction<ListCategoriesResponse>) => {
           state.loading = false;
           state.categories = action.payload.data;
-        }
+        },
       )
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
@@ -339,6 +382,21 @@ const categorySlice = createSlice({
         state.participantsLoading = false;
         state.error = action.payload as string;
       })
+      .addCase(addParticipant.pending, (state) => {
+        state.participantsLoading = true;
+        state.error = null;
+      })
+      .addCase(addParticipant.fulfilled, (state, action) => {
+        state.participantsLoading = false;
+        const categoryId = action.meta.arg.categoryId;
+        if (state.participants[categoryId]) {
+          state.participants[categoryId].push(action.payload.data as any);
+        }
+      })
+      .addCase(addParticipant.rejected, (state, action) => {
+        state.participantsLoading = false;
+        state.error = action.payload as string;
+      })
       .addCase(updateParticipant.pending, (state) => {
         state.participantsLoading = true;
         state.error = null;
@@ -350,13 +408,13 @@ const categorySlice = createSlice({
           const categoryId = action.payload.data.category._id;
           if (state.participants[categoryId]) {
             const index = state.participants[categoryId].findIndex(
-              (p) => p._id === action.payload.data._id
+              (p) => p._id === action.payload.data._id,
             );
             if (index !== -1) {
               state.participants[categoryId][index] = action.payload.data;
             }
           }
-        }
+        },
       )
       .addCase(updateParticipant.rejected, (state, action) => {
         state.participantsLoading = false;
@@ -366,18 +424,15 @@ const categorySlice = createSlice({
         state.participantsLoading = true;
         state.error = null;
       })
-      .addCase(
-        deleteParticipant.fulfilled,
-        (state, action) => {
-          state.participantsLoading = false;
-          const { categoryId, participantId } = action.meta.arg;
-          if (state.participants[categoryId]) {
-            state.participants[categoryId] = state.participants[categoryId].filter(
-              (p) => p._id !== participantId
-            );
-          }
+      .addCase(deleteParticipant.fulfilled, (state, action) => {
+        state.participantsLoading = false;
+        const { categoryId, participantId } = action.meta.arg;
+        if (state.participants[categoryId]) {
+          state.participants[categoryId] = state.participants[
+            categoryId
+          ].filter((p) => p._id !== participantId);
         }
-      )
+      })
       .addCase(deleteParticipant.rejected, (state, action) => {
         state.participantsLoading = false;
         state.error = action.payload as string;
@@ -386,15 +441,18 @@ const categorySlice = createSlice({
         state.calculateLoading = true;
         state.error = null;
       })
-      .addCase(calculateCategory.fulfilled, (state, action: PayloadAction<CalculateCategoryResponse>) => {
-        state.calculateLoading = false;
-        const index = state.categories.findIndex(
-          (cat) => cat._id === action.payload.data.category._id
-        );
-        if (index !== -1) {
-          state.categories[index] = action.payload.data.category;
-        }
-      })
+      .addCase(
+        calculateCategory.fulfilled,
+        (state, action: PayloadAction<CalculateCategoryResponse>) => {
+          state.calculateLoading = false;
+          const index = state.categories.findIndex(
+            (cat) => cat._id === action.payload.data.category._id,
+          );
+          if (index !== -1) {
+            state.categories[index] = action.payload.data.category;
+          }
+        },
+      )
       .addCase(calculateCategory.rejected, (state, action) => {
         state.calculateLoading = false;
         state.error = action.payload as string;
@@ -403,15 +461,18 @@ const categorySlice = createSlice({
         state.exportLoading = true;
         state.error = null;
       })
-      .addCase(exportCategory.fulfilled, (state, action: PayloadAction<ExportCategoryResponse>) => {
-        state.exportLoading = false;
-        const index = state.categories.findIndex(
-          (cat) => cat._id === action.payload.data._id
-        );
-        if (index !== -1) {
-          state.categories[index] = action.payload.data;
-        }
-      })
+      .addCase(
+        exportCategory.fulfilled,
+        (state, action: PayloadAction<ExportCategoryResponse>) => {
+          state.exportLoading = false;
+          const index = state.categories.findIndex(
+            (cat) => cat._id === action.payload.data._id,
+          );
+          if (index !== -1) {
+            state.categories[index] = action.payload.data;
+          }
+        },
+      )
       .addCase(exportCategory.rejected, (state, action) => {
         state.exportLoading = false;
         state.error = action.payload as string;
