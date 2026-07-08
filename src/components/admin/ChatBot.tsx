@@ -4,6 +4,7 @@ import {
   CircleArrowReload01Icon,
   ChatBotIcon,
   MaximizeScreenIcon,
+  ImageAdd01Icon,
 } from "hugeicons-react";
 import {
   fetchSuggestions,
@@ -14,8 +15,9 @@ import {
   clearConversation,
   setIsOpen,
   setIsFullscreen,
-} from "../redux/chatbotSlice";
-import { useAppDispatch, type RootState } from "../redux/store";
+} from "../../redux/chatbotSlice";
+import { uploadQrImage } from "../../redux/categorySlice";
+import { useAppDispatch, type RootState } from "../../redux/store";
 import { useTranslation } from "react-i18next";
 
 interface ChatBotProps {
@@ -23,6 +25,7 @@ interface ChatBotProps {
 }
 
 const MAX_TEXTAREA_HEIGHT = 76;
+const IMG_MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
 const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
   const { t } = useTranslation();
@@ -34,8 +37,17 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
   );
 
   const [input, setInput] = useState("");
+  const [pendingImg, setPendingImg] = useState<{
+    file: File;
+    preview: string;
+  } | null>(null);
+  const [pendingUploadUrl, setPendingUploadUrl] = useState<string | null>(null);
+  const [imgUploading, setImgUploading] = useState(false);
+  const [imgError, setImgError] = useState("");
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     dispatch(fetchSuggestions());
@@ -59,13 +71,64 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
   }, [isOpen]);
 
+  const handleImgSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > IMG_MAX_SIZE) {
+      setImgError(t("chatbot.imgSizeError"));
+      return;
+    }
+    setImgError("");
+    setPendingUploadUrl(null);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setPendingImg({ file, preview: ev.target?.result as string });
+    };
+    reader.readAsDataURL(file);
+
+    // Upload immediately while user types their message
+    setImgUploading(true);
+    dispatch(uploadQrImage(file)).then((result) => {
+      setImgUploading(false);
+      if (uploadQrImage.fulfilled.match(result)) {
+        setPendingUploadUrl(result.payload.secure_url);
+      } else {
+        setImgError(t("chatbot.imgUploadError"));
+        setPendingImg(null);
+      }
+    });
+  };
+
+  const handleRemoveImg = () => {
+    setPendingImg(null);
+    setPendingUploadUrl(null);
+    setImgError("");
+  };
+
   const handleSend = async (text: string) => {
-    if (!text.trim() || loading || !token) return;
-    dispatch(addUserMessage(text));
+    const hasImg = !!pendingImg;
+    if (!text.trim() && !hasImg) return;
+    if (loading || imgUploading || !token) return;
+
+    let agentText = text.trim();
+    let displayImageUrl: string | undefined;
+
+    if (pendingImg && pendingUploadUrl) {
+      displayImageUrl = pendingUploadUrl;
+      agentText = agentText
+        ? `${agentText}\n[Ảnh QR: ${pendingUploadUrl}]`
+        : `[Ảnh QR: ${pendingUploadUrl}]`;
+      setPendingImg(null);
+      setPendingUploadUrl(null);
+    }
+
+    dispatch(addUserMessage({ content: text.trim(), imageUrl: displayImageUrl }));
     setInput("");
     if (inputRef.current) inputRef.current.style.height = "auto";
-    await dispatch(sendChatMessage(text));
+    await dispatch(sendChatMessage(agentText));
     onRefreshNeeded?.();
+    inputRef.current?.focus();
   };
 
   const handleReset = () => {
@@ -88,6 +151,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
     e.target.style.overflowY =
       e.target.scrollHeight > MAX_TEXTAREA_HEIGHT ? "auto" : "hidden";
   };
+
+  const isSending = loading || imgUploading;
+  const canSend = !isSending && (!!input.trim() || !!pendingImg);
 
   return (
     <>
@@ -152,12 +218,19 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
                       : "bg-gray-300 text-black rounded-bl-sm"
                   }`}
                 >
-                  {msg.content}
+                  {msg.imageUrl && (
+                    <img
+                      src={msg.imageUrl}
+                      alt="QR"
+                      className="rounded-lg mb-1 max-w-full max-h-40 object-contain"
+                    />
+                  )}
+                  {msg.content && <span>{msg.content}</span>}
                 </div>
               </div>
             ))}
 
-            {loading && (
+            {isSending && (
               <div className="flex justify-start">
                 <div className="bg-gray-300 rounded-2xl rounded-bl-sm px-4 py-3">
                   <span className="flex gap-1 items-center">
@@ -178,7 +251,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
                 <button
                   key={s.id}
                   onClick={() => handleSend(s.prompt)}
-                  disabled={loading}
+                  disabled={isSending}
                   className="font-primaryMedium text-xs px-2.5 py-1 rounded-full border border-gray-600 text-gray-700 hover:border-red-400 hover:text-red-400 disabled:opacity-40 transition-colors"
                 >
                   {s.label}
@@ -187,8 +260,52 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
             </div>
           )}
 
+          {/* Pending image preview */}
+          {pendingImg && (
+            <div className="px-3 pt-2 shrink-0">
+              <div className="relative inline-block">
+                <img
+                  src={pendingImg.preview}
+                  alt="preview"
+                  className="h-16 w-16 rounded-lg object-cover border-2 border-red-400"
+                />
+                <button
+                  onClick={handleRemoveImg}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 text-white rounded-full flex items-center justify-center text-xs leading-none hover:bg-gray-600 transition-colors"
+                  title={t("chatbot.removeImage")}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Image error */}
+          {imgError && (
+            <p className="px-3 pt-1 text-xs text-red-500 font-primaryRegular shrink-0">
+              {imgError}
+            </p>
+          )}
+
           {/* Input row */}
           <div className="px-3 pb-3 pt-2 border-gray-700 flex gap-2 shrink-0 items-end">
+            {/* Image upload — never disabled by loading, only by imgUploading */}
+            <button
+              onClick={() => imgInputRef.current?.click()}
+              disabled={imgUploading}
+              className="w-9 h-9 shrink-0 bg-gray-200 focus:bg-gray-300 hover:bg-gray-300 active:scale-95 text-gray-600 rounded-xl flex items-center justify-center disabled:opacity-40 transition-all"
+              title={t("chatbot.uploadImage")}
+            >
+              <ImageAdd01Icon size={20} />
+            </button>
+            <input
+              ref={imgInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImgSelect}
+            />
+
             <textarea
               ref={inputRef}
               rows={1}
@@ -197,11 +314,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
               onKeyDown={handleKeyDown}
               placeholder={t("chatbot.inputPlaceholder") || "Nhập tin nhắn..."}
               disabled={loading}
-              className="flex-1 bg-gray-300 text-black font-primaryRegular text-sm rounded-xl px-3 py-2 outline-none border border-gray-600 focus:border-gray-600 placeholder-gray-500 disabled:opacity-50 transition-colors resize-none overflow-hidden"
+              className="flex-1 bg-gray-200 focus:bg-gray-300 text-black font-primaryRegular text-sm rounded-xl px-3 py-2 outline-none border border-gray-600 focus:border-gray-600 placeholder-gray-500 disabled:opacity-50 transition-colors resize-none overflow-hidden"
             />
             <button
               onClick={() => handleSend(input)}
-              disabled={loading || !input.trim()}
+              disabled={!canSend}
               className="w-9 h-9 shrink-0 bg-red-400 hover:bg-red-300 active:scale-95 text-black rounded-xl flex items-center justify-center text-base disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               ➤

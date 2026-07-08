@@ -1,9 +1,9 @@
 import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
 import App from "../App";
-import { MainPage } from "../pages/MainPage";
-import { LoginPage } from "../pages/LoginPage";
-import { AdminPage } from "../pages/AdminPage";
-import { UserExpensePage } from "../pages/UserExpensePage";
+import { MainPage } from "../pages/user/MainPage";
+import { LoginPage } from "../pages/admin/LoginPage";
+import { AdminPage } from "../pages/admin/AdminPage";
+import { UserExpensePage } from "../pages/user/UserExpensePage";
 import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
 

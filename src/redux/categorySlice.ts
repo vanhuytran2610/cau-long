@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-// import axios from "axios";
+import axios from "axios";
 import axiosInstance from "../helpers/axiosInstance";
 import type { RootState } from "./store";
 import {
@@ -20,6 +20,7 @@ import type {
   DeleteParticipantResponse,
   ExportCategoryPayload,
   ExportCategoryResponse,
+  GetCategoryResponse,
   ListCategoriesResponse,
   ListParticipantsResponse,
   UpdateCategoryPayload,
@@ -41,6 +42,8 @@ const initialState: CategoryState = {
   exportLoading: false,
   uploadQrLoading: false,
   deleteCategoryError: null,
+  category: null,
+  updateCategoryError: null,
 };
 
 export const createCategory = createAsyncThunk<
@@ -77,6 +80,7 @@ export const updateCategory = createAsyncThunk<
       {
         name: payload.name,
         is_selected: payload.is_selected,
+        content: payload.content,
       },
       {
         headers: { Authorization: `Bearer ${auth.token}` },
@@ -129,6 +133,30 @@ export const fetchCategories = createAsyncThunk<
   }
 });
 
+export const fetchCategoryById = createAsyncThunk<
+  GetCategoryResponse,
+  string,
+  { state: RootState }
+>(
+  "category/fetchCategoryById",
+  async (categoryId, { getState, rejectWithValue }) => {
+    const { auth } = getState() as { auth: { token: string | null } };
+    try {
+      const response = await axiosInstance.get(
+        `${API_URL}/api/categories/${categoryId}`,
+        {
+          headers: { Authorization: `Bearer ${auth.token}` },
+        },
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch category",
+      );
+    }
+  },
+);
+
 export const fetchParticipantsByCategory = createAsyncThunk<
   ListParticipantsResponse,
   string,
@@ -162,7 +190,13 @@ export const addParticipant = createAsyncThunk<
   try {
     const response = await axiosInstance.post(
       `${API_URL}/api/participants/${payload.categoryId}`,
-      { name: payload.name, status: payload.status },
+      {
+        name: payload.name,
+        status: payload.status,
+        quantity: payload.quantity,
+        level: payload.level,
+        gender: payload.gender,
+      },
       { headers: { Authorization: `Bearer ${auth.token}` } },
     );
     return response.data;
@@ -272,7 +306,7 @@ export const uploadQrImage = createAsyncThunk<UploadQrResponse, File>(
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-      const response = await axiosInstance.post(
+      const response = await axios.post(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
         formData,
       );
@@ -315,12 +349,13 @@ const categorySlice = createSlice({
       })
       .addCase(updateCategory.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.updateCategoryError = null;
       })
       .addCase(
         updateCategory.fulfilled,
         (state, action: PayloadAction<UpdateCategoryResponse>) => {
           state.loading = false;
+          state.updateCategoryError = null;
           const index = state.categories.findIndex(
             (cat) => cat._id === action.payload.data._id,
           );
@@ -331,7 +366,7 @@ const categorySlice = createSlice({
       )
       .addCase(updateCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.updateCategoryError = action.payload as string;
       })
       .addCase(deleteCategory.pending, (state) => {
         state.loading = true;
@@ -369,14 +404,50 @@ const categorySlice = createSlice({
           removeAuthFromStorage();
         }
       })
+      .addCase(fetchCategoryById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchCategoryById.fulfilled,
+        (state, action: PayloadAction<GetCategoryResponse>) => {
+          state.loading = false;
+          state.category = action.payload.data;
+          const index = state.categories.findIndex(
+            (cat) => cat._id === action.payload.data._id,
+          );
+          if (index !== -1) {
+            state.categories[index] = {
+              ...state.categories[index],
+              quantity: action.payload.data.quantity,
+            };
+          }
+        },
+      )
+      .addCase(fetchCategoryById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       .addCase(fetchParticipantsByCategory.pending, (state) => {
         state.participantsLoading = true;
         state.error = null;
       })
       .addCase(fetchParticipantsByCategory.fulfilled, (state, action) => {
         state.participantsLoading = false;
-        const categoryId = action.meta.arg; // This should work with your thunk typing
+        const categoryId = action.meta.arg;
         state.participants[categoryId] = action.payload.data.participants;
+        const index = state.categories.findIndex(
+          (cat) => cat._id === categoryId,
+        );
+        if (
+          index !== -1 &&
+          action.payload.data.category?.quantity !== undefined
+        ) {
+          state.categories[index] = {
+            ...state.categories[index],
+            quantity: action.payload.data.category.quantity,
+          };
+        }
       })
       .addCase(fetchParticipantsByCategory.rejected, (state, action) => {
         state.participantsLoading = false;

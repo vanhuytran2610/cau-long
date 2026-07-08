@@ -7,7 +7,8 @@ export const Component12: React.FC<{
   onGoCom1Click: () => void;
   categoryId: string;
   categoryName: string;
-}> = ({ onGoCom1Click, categoryId, categoryName }) => {
+  categoryContent: string;
+}> = ({ onGoCom1Click, categoryId, categoryName, categoryContent }) => {
   const [showDelayedContent, setShowDelayedContent] = useState(false);
   const { t } = useTranslation();
 
@@ -27,8 +28,11 @@ export const Component12: React.FC<{
           : "my-36"
       }`}
     >
-      <p className="text-red-400 font-primaryBold text-3xl text-center pb-10">
+      <p className="text-red-400 font-primaryBold text-3xl text-center pb-6">
         {t("component12.message", { categoryName: categoryName || "" })}
+      </p>
+      <p className="text-lg font-primaryMedium pb-8 text-gray-600 flex items-center justify-center text-center mx-4">
+        {categoryContent}
       </p>
       <ComponentMeme2 />
       {(categoryId || categoryId !== "") && showDelayedContent && (

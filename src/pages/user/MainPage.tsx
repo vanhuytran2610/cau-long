@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Component1 } from "../components/Component1";
-import { Component3 } from "../components/Component3";
-import { Component4 } from "../components/Component4";
-import { Component6 } from "../components/Component6";
-import { Component8 } from "../components/Component8";
-import { Component10 } from "../components/Component10";
-import { Component11 } from "../components/Component11";
+import { Component1 } from "../../components/user/Component1";
+import { Component3 } from "../../components/user/Component3";
+import { Component4 } from "../../components/user/Component4";
+import { Component6 } from "../../components/user/Component6";
+import { Component8 } from "../../components/user/Component8";
+import { Component10 } from "../../components/user/Component10";
+import { Component11 } from "../../components/user/Component11";
 import { useSelector } from "react-redux";
-import { useAppDispatch, type RootState } from "../redux/store";
-import { getSelectedCategory } from "../redux/userSlice";
-import Loading from "../components/Loading";
-import { Component12 } from "../components/Component12";
+import { useAppDispatch, type RootState } from "../../redux/store";
+import { getSelectedCategory } from "../../redux/userSlice";
+import Loading from "../../components/Loading";
+import { Component12 } from "../../components/user/Component12";
 import { useTranslation } from "react-i18next";
-import { setLanguage } from "../redux/languageSlice";
+import { setLanguage } from "../../redux/languageSlice";
 
 export const MainPage: React.FC = () => {
   const [currentComponent, setCurrentComponent] = useState("Component1");
-  const { categoryId, categoryName, loadingCategory } = useSelector(
+  const { categoryId, categoryName, loadingCategory, categoryContent } = useSelector(
     (state: RootState) => state.user,
   );
   const dispatch = useAppDispatch();
@@ -25,7 +25,7 @@ export const MainPage: React.FC = () => {
 
   useEffect(() => {
     dispatch(getSelectedCategory());
-  }, []);
+  }, [dispatch, language]);
 
   const handleGoClick = () => {
     setCurrentComponent("Component12"); // All "Go" buttons lead to ComponentFinal
@@ -96,6 +96,7 @@ export const MainPage: React.FC = () => {
             onGoCom1Click={handleGoCom1Click}
             categoryId={categoryId || ""}
             categoryName={categoryName || ""}
+            categoryContent={categoryContent || ""}
           />
         );
       case "Component12":
@@ -104,6 +105,7 @@ export const MainPage: React.FC = () => {
             onGoCom1Click={handleGoCom1Click}
             categoryId={categoryId || ""}
             categoryName={categoryName || ""}
+            categoryContent={categoryContent || ""}
           />
         );
       default:

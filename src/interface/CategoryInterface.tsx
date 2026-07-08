@@ -1,6 +1,19 @@
+export interface CategoryQuantity {
+  _id: string;
+  category_id: string;
+  male_total: number;
+  female_total: number;
+  male_current: number;
+  female_current: number;
+  male_remain: number;
+  female_remain: number;
+}
+
 export interface Category {
   _id: string;
   name: string;
+  content: string;
+  content_en: string;
   is_selected: boolean;
   isCalculated: boolean;
   paymentInfo: string;
@@ -10,6 +23,7 @@ export interface Category {
   updatedAt: string;
   __v: number;
   paymentResult: string;
+  quantity: CategoryQuantity | null;
 }
 
 export interface Participant {
@@ -20,6 +34,8 @@ export interface Participant {
   quantity: number;
   money: number;
   isPaid: boolean;
+  level: string;
+  gender: "nam" | "nữ" | "";
   __v: number;
 }
 
@@ -35,6 +51,8 @@ export interface CategoryState {
   exportLoading: boolean;
   uploadQrLoading: boolean;
   deleteCategoryError: string | null;
+  category: Category | null;
+  updateCategoryError: string | null;
 }
 
 export interface UploadQrResponse {
@@ -44,12 +62,15 @@ export interface UploadQrResponse {
 
 export interface CreateCategoryPayload {
   name: string;
+  content?: string;
+  is_selected?: boolean;
 }
 
 export interface UpdateCategoryPayload {
   id: string;
   name: string;
   is_selected: boolean;
+  content?: string;
 }
 
 export interface CreateCategoryResponse {
@@ -108,6 +129,12 @@ export interface ListCategoriesResponse {
   data: Category[];
 }
 
+export interface GetCategoryResponse {
+  statusCode: number;
+  message: string;
+  data: Category;
+}
+
 export interface IListParticipantsResponse {
   category: Category;
   participants: Participant[];
@@ -124,6 +151,8 @@ export interface AddParticipantPayload {
   status: "tham gia" | "lần sau";
   quantity: number;
   categoryId: string;
+  level?: string;
+  gender?: "nam" | "nữ";
 }
 
 export interface AddParticipantResponse {

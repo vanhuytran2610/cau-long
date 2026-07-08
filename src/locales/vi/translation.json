@@ -6,7 +6,11 @@
         "maximize": "Phóng to",
         "inputPlaceholder": "Nhập tin nhắn...",
         "welcomeFallback": "Xin chào! Tôi có thể giúp gì cho bạn?",
-        "errorMessage": "Có lỗi xảy ra. Vui lòng thử lại."
+        "errorMessage": "Có lỗi xảy ra. Vui lòng thử lại.",
+        "uploadImage": "Tải ảnh lên",
+        "removeImage": "Xóa ảnh",
+        "imgSizeError": "Ảnh không được vượt quá 5MB.",
+        "imgUploadError": "Tải ảnh lên thất bại. Vui lòng thử lại."
     },
     "component1": {
         "message": "Ê, đi đánh cầu lông {{categoryName}} không?",
@@ -39,7 +43,7 @@
     },
     "component12": {
         "message": "{{categoryName}} nhé !!!",
-        "formMessage": "Tuyệt vời quá!!! Đi thì bạn điền tên rồi bấm \"OK\" nha, còn nếu không đi thì bấm \"Lần sau\" nha 🙋‍♀️🙋‍♂️🙆‍♂️"
+        "formMessage": "Tuyệt vời quá!!! Đi thì bạn điền thông tin rồi bấm \"OK\" nha, còn nếu không đi thì bấm \"Lần sau\" nha 🙋‍♀️🙋‍♂️🙆‍♂️"
     },
     "componentMeme1": {
         "linkText": "Xem phí vãng lai ở đây nha"
@@ -47,10 +51,13 @@
     "formComponent": {
         "inputNamePlaceholder": "Nhập tên bạn đi nè...",
         "rejectInput": "Ngày đánh cầu đã đến, bạn không thể đăng ký nữa nha!",
-        "noteInput": "Nếu bạn đăng ký cho vãng lai thì nhập \"Tên (vãng lai)\" nha!!!",
         "nextTime": "Lần sau",
         "homepage": "Trang chủ",
-        "modalClose": "Đóng"
+        "modalClose": "Đóng",
+        "levelPlaceholder": "Trình độ (tùy chọn)",
+        "male": "Nam",
+        "female": "Nữ",
+        "slotFull": "(hết)"
     },
     "mainPage": {
         "title": "Cầu lông {{categoryName}}"
@@ -83,8 +90,10 @@
         },
         "createDate": {
             "title": "Tạo Ngày Mới",
-            "button": "Tạo Ngày",
-            "placeholder": "Ngày 27/6, 19h30"
+            "button": "Tạo Ngày Mới",
+            "placeholder": "Ngày 27/6, 19h30",
+            "contentPlaceholder": "Nội dung tuyển (VD: Tuyển vãng lai, 8 nam (TB, TB+), 6 nữ (TB-, TB))",
+            "submitButton": "Thêm"
         },
         "dateList": {
             "title": "Danh Sách Ngày Đánh Cầu",
@@ -109,16 +118,18 @@
             "no": "STT",
             "name": "Tên",
             "amount": "Số tiền",
-            "isPaid": "Đã thanh toán",
-            "deleteParticipant": "Xóa thành viên",
-            "noParticipants": "Không có người tham gia cho ngày này!!!"
+            "isPaid": "Thanh toán",
+            "deleteParticipant": "Xóa",
+            "noParticipants": "Không có người tham gia cho ngày này!!!",
+            "gender": "Giới tính"
         },
         "editModal": {
             "title": "Sửa Ngày",
             "dateLabel": "Ngày:",
             "selectDate": "Chọn Ngày (Chọn ngày này để bỏ phiếu)",
             "save": "Lưu",
-            "cancel": "Hủy"
+            "cancel": "Hủy",
+            "contentLabel": "Nội dung"
         },
         "deleteModal": {
             "title": "Xác nhận xóa",
@@ -146,7 +157,8 @@
             "alreadyLoggedOut": "Bạn đã đăng xuất",
             "logoutSuccess": "Đã đăng xuất thành công!",
             "loginToCreate": "Hãy đăng nhập để tạo ngày",
-            "loginToUpdate": "Hãy đăng nhập để cập nhật ngày"
+            "loginToUpdate": "Hãy đăng nhập để cập nhật ngày",
+            "qrImgSizeError": "Ảnh QR không được vượt quá 5MB."
         },
         "addParticipantModal": {
             "title": "Thêm thành viên",

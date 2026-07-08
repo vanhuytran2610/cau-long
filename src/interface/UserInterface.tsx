@@ -1,4 +1,4 @@
-import type { Category } from "./CategoryInterface";
+import type { Category, CategoryQuantity } from "./CategoryInterface";
 
 export interface UserState {
   username: string | null;
@@ -14,6 +14,8 @@ export interface UserState {
   userCategoriesLoading: boolean;
   userCategoriesError: string | null;
   isCategoryCalculated: boolean;
+  categoryQuantity: CategoryQuantity | null;
+  categoryContent: string | null;
 }
 
 export interface FetchUserCategoriesResponse {
@@ -27,6 +29,8 @@ export interface SubmitUserPayload {
   status: "tham gia" | "lần sau";
   quantity: number;
   categoryId: string;
+  level?: string;
+  gender?: "nam" | "nữ";
 }
 
 export interface SubmitUserResponse {
@@ -61,6 +65,7 @@ export interface UserParticipant {
 export interface UserCategory {
   _id: string;
   name: string;
+  content: string;
   is_selected: boolean;
   isCalculated: boolean;
   isShowMoney: boolean;
@@ -68,4 +73,5 @@ export interface UserCategory {
   qr_img_url: string;
   participants: UserParticipant[];
   paymentResult: string;
+  quantity: CategoryQuantity | null;
 }

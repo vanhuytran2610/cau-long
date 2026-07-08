@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { clearError, login } from "../redux/authSlice";
+import { clearError, login } from "../../redux/authSlice";
 import { useSelector } from "react-redux";
-import { useAppDispatch, type RootState } from "../redux/store";
+import { useAppDispatch, type RootState } from "../../redux/store";
 import { useNavigate } from "react-router";
-import Loading from "../components/Loading";
+import Loading from "../../components/Loading";
 import { useTranslation } from "react-i18next";
 
 export const LoginPage: React.FC = () => {

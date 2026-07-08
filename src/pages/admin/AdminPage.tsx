@@ -2,22 +2,18 @@ import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
   fetchCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
   fetchParticipantsByCategory,
   clearCategoryError,
-  deleteParticipant,
   storeCategoryUpDe,
   updateParticipant,
   calculateCategory,
   exportCategory,
   uploadQrImage,
-  addParticipant,
-} from "../redux/categorySlice";
-import { logout } from "../redux/authSlice"; // Assuming checkAuth action is added
-import { useAppDispatch, type RootState } from "../redux/store";
-import Loading from "../components/Loading";
+  fetchCategoryById,
+} from "../../redux/categorySlice";
+import { logout } from "../../redux/authSlice";
+import { useAppDispatch, type RootState } from "../../redux/store";
+import Loading from "../../components/Loading";
 import {
   Delete02Icon,
   Edit02Icon,
@@ -26,29 +22,21 @@ import {
   CheckmarkCircle03Icon,
   LogoutSquare01Icon,
   AddCircleIcon,
-  AddTeamIcon
+  AddTeamIcon,
 } from "hugeicons-react";
-import type { Category, Participant } from "../interface/CategoryInterface";
-import ChatBot from "../components/ChatBot";
+import type { Category, Participant } from "../../interface/CategoryInterface";
+import ChatBot from "../../components/admin/ChatBot";
 import { useTranslation } from "react-i18next";
-import { setLanguage } from "../redux/languageSlice";
+import { setLanguage } from "../../redux/languageSlice";
+import { ModifyCategoryComponent } from "../../components/admin/ModifyCategoryComponent";
+import { AddParticipantComponent } from "../../components/admin/AddParticipantComponent";
+import { DeleteComponent } from "../../components/admin/DeleteComponent";
 
 interface Toast {
   id: string;
   message: string;
   type: "success" | "error" | "info" | "warning";
 }
-
-// interface EditParticipantModalProps {
-//   participant: Participant | null;
-//   categoryId: string;
-//   onClose: () => void;
-//   onUpdate: (
-//     categoryId: string,
-//     participantId: string,
-//     isPaid: boolean
-//   ) => Promise<void>;
-// }
 
 export const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -61,17 +49,12 @@ export const AdminPage: React.FC = () => {
     categories,
     participants,
     loading,
-    error,
-    createdLoading,
-    participantsLoading,
-    categoryUpDe,
     calculateLoading,
     exportLoading,
     uploadQrLoading,
-    deleteCategoryError,
   } = useSelector((state: RootState) => state.category);
 
-  const [newCategoryName, setNewCategoryName] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
@@ -80,20 +63,11 @@ export const AdminPage: React.FC = () => {
     participantId: string;
     categoryId: string;
   } | null>(null);
-  const [addParticipantCategoryId, setAddParticipantCategoryId] = useState<string | null>(null);
-  const [newParticipantName, setNewParticipantName] = useState("");
-  const [addParticipantError, setAddParticipantError] = useState<string | null>(null);
-  const [updateError, setUpdateError] = useState<string | null>(null);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [deleteParticipantError, setDeleteParticipantError] = useState<
+  const [addParticipantCategoryId, setAddParticipantCategoryId] = useState<
     string | null
   >(null);
-  const [deleteCategoryErr, setDeleteCategoryErr] = useState<string | null>(
-    null,
-  );
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  // Per-category inline calculate/export state
   const [paymentInfoMap, setPaymentInfoMap] = useState<{
     [id: string]: string;
   }>({});
@@ -109,7 +83,6 @@ export const AdminPage: React.FC = () => {
     [id: string]: string | null;
   }>({});
 
-  // Helper function to check authentication before dispatch
   const checkAuthAndDispatch = (callback: () => void) => {
     if (!isAuthenticated) {
       addToast(t("admin.toast.loginRequired"), "error");
@@ -119,58 +92,15 @@ export const AdminPage: React.FC = () => {
     callback();
   };
 
-  // Toast functions
   const addToast = (message: string, type: Toast["type"] = "info") => {
     const id = Date.now().toString();
-    const newToast: Toast = { id, message, type };
-    setToasts((prev) => [...prev, newToast]);
-
-    // Auto remove toast after 5 seconds
-    setTimeout(() => {
-      removeToast(id);
-    }, 5000);
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => removeToast(id), 5000);
   };
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
-
-  // Check authentication continuously
-  //   useEffect(() => {
-  //     let intervalId: NodeJS.Timeout;
-
-  //     const checkAuthContinuously = () => {
-  //       if (isAuthenticated && !checkAuthLoading) {
-  //         dispatch(checkAuth())
-  //           .unwrap()
-  //           .then((response: any) => {
-  //             if (response.statusCode !== 200) {
-  //               // Authentication failed (e.g., token blacklisted)
-  //               dispatch(logout());
-  //               addToast("Session expired, please log in again", "error");
-  //               setShowAuthModal(true);
-  //             }
-  //           })
-  //           .catch((error: any) => {
-  //             console.error("Error checking auth:", error);
-  //             addToast("Error checking session, please log in again", "error");
-  //             setShowAuthModal(true);
-  //           });
-  //       }
-  //     };
-
-  //     if (isAuthenticated) {
-  //       checkAuthContinuously(); // Initial check
-  //       intervalId = setInterval(checkAuthContinuously, 30000); // Poll every 30 seconds
-  //     }
-
-  //     // Cleanup on unmount or auth change
-  //     return () => {
-  //       if (intervalId) clearInterval(intervalId);
-  //     };
-  //   }, [isAuthenticated, checkAuthLoading, dispatch]);
-
-  // Check authentication on component mount
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -181,107 +111,11 @@ export const AdminPage: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(fetchCategories());
-      if (categoryUpDe) {
-        dispatch(fetchParticipantsByCategory(categoryUpDe));
-      }
     }
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated, language]);
 
-  // Redirect to login page
   const redirectToLogin = () => {
-    window.location.href = "/login"; // Adjust path as needed
-  };
-
-  const handleCreateCategory = async () => {
-    if (!isAuthenticated) {
-      addToast(t("admin.toast.loginToCreate"), "error");
-      setShowAuthModal(true);
-      return;
-    }
-
-    console.log(error);
-
-    if (newCategoryName.trim()) {
-      dispatch(clearCategoryError());
-      try {
-        const result = await dispatch(
-          createCategory({ name: newCategoryName }),
-        );
-        if (createCategory.fulfilled.match(result)) {
-          setEditCategory(null);
-          setNewCategoryName("");
-          dispatch(fetchCategories());
-          addToast(t("admin.toast.dateCreated"), "success");
-        } else if (createCategory.rejected.match(result)) {
-          const errorMsg =
-            (result.payload as string) || t("admin.toast.createFailed");
-          setCreateError(errorMsg);
-        }
-      } catch (err) {
-        const errorMsg = t("admin.toast.createFailed");
-        setCreateError(errorMsg);
-        addToast(errorMsg, "error");
-      }
-    }
-  };
-
-  const handleUpdateCategory = async (category: Category) => {
-    if (!isAuthenticated) {
-      addToast(t("admin.toast.loginToUpdate"), "error");
-      setShowAuthModal(true);
-      return;
-    }
-
-    dispatch(clearCategoryError());
-    setUpdateError(null);
-
-    try {
-      const result = await dispatch(
-        updateCategory({
-          id: category._id,
-          name: category.name,
-          is_selected: category.is_selected,
-        }),
-      );
-
-      if (updateCategory.fulfilled.match(result)) {
-        setEditCategory(null);
-        dispatch(fetchCategories());
-        await dispatch(fetchParticipantsByCategory(category._id));
-        addToast(t("admin.toast.dateUpdated"), "success");
-      } else if (updateCategory.rejected.match(result)) {
-        const errorMsg =
-          (result.payload as string) || t("admin.toast.updateFailed");
-        setUpdateError(errorMsg);
-      }
-    } catch (err) {
-      const errorMsg = t("admin.toast.updateFailed");
-      setUpdateError(errorMsg);
-      addToast(errorMsg, "error");
-    }
-  };
-
-  const handleDeleteCategory = (id: string) => {
-    checkAuthAndDispatch(async () => {
-      dispatch(clearCategoryError());
-
-      try {
-        const result = await dispatch(deleteCategory(id));
-        if (deleteCategory.fulfilled.match(result)) {
-          setDeleteCategoryId(null);
-          dispatch(fetchCategories());
-          addToast(t("admin.toast.dateDeleted"), "success");
-        } else if (deleteCategory.rejected.match(result)) {
-          setDeleteCategoryErr(
-            deleteCategoryError ||
-              (result.payload as string) ||
-              t("admin.toast.deleteFailed"),
-          );
-        }
-      } catch (error: any) {
-        setDeleteCategoryErr(error?.message || t("admin.toast.deleteFailed"));
-      }
-    });
+    window.location.href = "/login";
   };
 
   const handleToggleIsPaid = (
@@ -303,7 +137,7 @@ export const AdminPage: React.FC = () => {
           dispatch(storeCategoryUpDe(categoryId));
           addToast(t("admin.toast.updateSuccess"), "success");
         }
-      } catch (error: any) {
+      } catch {
         addToast(t("admin.toast.updateError"), "error");
       }
     });
@@ -329,10 +163,10 @@ export const AdminPage: React.FC = () => {
             [category._id]: (result.payload as string) || "Failed",
           }));
         }
-      } catch (error: any) {
+      } catch (err: any) {
         setCalculateErrorMap((prev) => ({
           ...prev,
-          [category._id]: error?.message || "Failed to calculate",
+          [category._id]: err?.message || "Failed to calculate",
         }));
       }
     });
@@ -384,10 +218,10 @@ export const AdminPage: React.FC = () => {
             [category._id]: (result.payload as string) || "Failed",
           }));
         }
-      } catch (error: any) {
+      } catch (err: any) {
         setExportErrorMap((prev) => ({
           ...prev,
-          [category._id]: error?.message || "Failed to export",
+          [category._id]: err?.message || "Failed to export",
         }));
       }
     });
@@ -395,6 +229,10 @@ export const AdminPage: React.FC = () => {
 
   const handleQrFileChange = (categoryId: string, file: File | null): void => {
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      addToast(t("admin.toast.qrImgSizeError"), "error");
+      return;
+    }
     setQrFileMap((prev) => ({ ...prev, [categoryId]: file }));
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -421,65 +259,6 @@ export const AdminPage: React.FC = () => {
     });
   };
 
-  const handleAddParticipant = async () => {
-    if (!addParticipantCategoryId || !newParticipantName.trim()) return;
-    setAddParticipantError(null);
-    try {
-      const result = await dispatch(
-        addParticipant({ categoryId: addParticipantCategoryId, name: newParticipantName.trim(), status: "tham gia", quantity: 1 }),
-      );
-      if (addParticipant.fulfilled.match(result)) {
-        await dispatch(fetchParticipantsByCategory(addParticipantCategoryId));
-        setNewParticipantName("");
-        setAddParticipantCategoryId(null);
-        addToast(t("admin.toast.participantAdded"), "success");
-      } else if (addParticipant.rejected.match(result)) {
-        setAddParticipantError((result.payload as string) || t("admin.toast.participantAddFailed"));
-      }
-    } catch {
-      setAddParticipantError(t("admin.toast.participantAddFailed"));
-    }
-  };
-
-  const handleDeleteParticipant = async (
-    participantId: string,
-    categoryId: string,
-  ) => {
-    checkAuthAndDispatch(async () => {
-      dispatch(clearCategoryError());
-
-      try {
-        // Delete the participant
-        const result = await dispatch(
-          deleteParticipant({ participantId, categoryId }),
-        );
-
-        if (deleteParticipant.fulfilled.match(result)) {
-          dispatch(storeCategoryUpDe(categoryId));
-
-          // Fetch updated participants list for this category
-          await dispatch(fetchParticipantsByCategory(categoryId));
-
-          // Close the modal and show success message
-          setDeleteParticipantInfo(null);
-          addToast(t("admin.toast.participantDeleted"), "success");
-        } else if (deleteParticipant.rejected.match(result)) {
-          const errorMsg =
-            (result.payload as string) ||
-            t("admin.toast.participantDeleteFailed");
-          setDeleteParticipantError(errorMsg);
-        }
-
-        // Store the category ID for future reference
-      } catch (error: any) {
-        setDeleteParticipantError(
-          error?.message || t("admin.toast.participantDeleteFailed"),
-        );
-        console.error("Error deleting participant:", error);
-      }
-    });
-  };
-
   const toggleParticipants = async (categoryId: string) => {
     if (!isAuthenticated) {
       addToast(t("admin.toast.loginToViewParticipants"), "error");
@@ -499,6 +278,7 @@ export const AdminPage: React.FC = () => {
         expandedCategories.filter((id) => id !== categoryId),
       );
     }
+    await dispatch(fetchCategoryById(categoryId));
     dispatch(storeCategoryUpDe(categoryId));
   };
 
@@ -507,7 +287,6 @@ export const AdminPage: React.FC = () => {
       addToast(t("admin.toast.alreadyLoggedOut"), "info");
       return;
     }
-
     dispatch(logout());
     addToast(t("admin.toast.logoutSuccess"), "info");
   };
@@ -516,38 +295,39 @@ export const AdminPage: React.FC = () => {
     document.title = t("admin.title");
   }, [t]);
 
-  // Show auth modal if not authenticated
+  const toastContainer = (
+    <div className="fixed top-4 right-4 z-50 space-y-2">
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          className={`px-4 py-3 rounded-lg shadow-lg text-black min-w-72 flex items-center justify-between transition-all duration-300 ease-in-out transform ${
+            toast.type === "success"
+              ? "bg-green-600"
+              : toast.type === "error"
+                ? "bg-red-400"
+                : toast.type === "warning"
+                  ? "bg-yellow-600"
+                  : "bg-gray-400"
+          } motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-4 motion-safe:duration-300`}
+        >
+          <span className="text-md font-primaryMedium text-black">
+            {toast.message}
+          </span>
+          <button
+            onClick={() => removeToast(toast.id)}
+            className="ml-3 text-black hover:text-gray-200 transition-colors duration-200 text-xl font-primaryMedium mb-1"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+
   if (isAuthenticated === false) {
     return (
       <>
-        <div className="fixed top-4 right-4 z-50 space-y-2">
-          {toasts.map((toast) => (
-            <div
-              key={toast.id}
-              className={`px-4 py-3 rounded-lg shadow-lg text-black min-w-72 flex items-center justify-between transition-all duration-300 ease-in-out transform ${
-                toast.type === "success"
-                  ? "bg-green-600"
-                  : toast.type === "error"
-                    ? "bg-red-400"
-                    : toast.type === "warning"
-                      ? "bg-yellow-600"
-                      : "bg-gray-400"
-              } motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-4 motion-safe:duration-300 group-[.toast-container]:motion-safe:animate-out group-[.toast-container]:motion-safe:fade-out group-[.toast-container]:motion-safe:slide-out-to-top-4`}
-            >
-              <span className="text-md font-primaryMedium text-black">
-                {toast.message}
-              </span>
-              <button
-                onClick={() => removeToast(toast.id)}
-                className="ml-3 text-black hover:text-gray-200 transition-colors duration-200"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Authentication Modal */}
+        {toastContainer}
         {showAuthModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-8 rounded-lg min-w-md w-full mx-4 text-center">
@@ -585,7 +365,6 @@ export const AdminPage: React.FC = () => {
     );
   }
 
-  // Show loading screen for initial page load
   if (loading && categories.length === 0) {
     return (
       <div className="max-w-7xl mx-auto my-36">
@@ -594,73 +373,9 @@ export const AdminPage: React.FC = () => {
     );
   }
 
-  const handleNewCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewCategoryName(e.target.value);
-    if (error) {
-      dispatch(clearCategoryError());
-      setCreateError(null);
-    }
-  };
-
-  const handleEditCategoryNameChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    if (editCategory) {
-      setEditCategory({
-        ...editCategory,
-        name: e.target.value,
-      });
-    }
-    if (updateError || error) {
-      dispatch(clearCategoryError());
-      setUpdateError(null);
-    }
-  };
-
-  const handleEditCategorySelectedChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    if (editCategory) {
-      setEditCategory({
-        ...editCategory,
-        is_selected: e.target.checked,
-      });
-    }
-    if (updateError || error) {
-      dispatch(clearCategoryError());
-      setUpdateError(null);
-    }
-  };
-
   return (
     <>
-      {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`px-4 py-3 rounded-lg shadow-lg text-black min-w-72 flex items-center justify-between transition-all duration-300 ease-in-out transform ${
-              toast.type === "success"
-                ? "bg-green-600"
-                : toast.type === "error"
-                  ? "bg-red-400"
-                  : toast.type === "warning"
-                    ? "bg-yellow-600"
-                    : "bg-gray-400"
-            } motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-4 motion-safe:duration-300 group-[.toast-container]:motion-safe:animate-out group-[.toast-container]:motion-safe:fade-out group-[.toast-container]:motion-safe:slide-out-to-top-4`}
-          >
-            <span className="text-md font-primaryMedium text-black">
-              {toast.message}
-            </span>
-            <button
-              onClick={() => removeToast(toast.id)}
-              className="ml-3 text-black hover:text-gray-200 transition-colors duration-200 text-xl font-primaryMedium mb-1"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
+      {toastContainer}
 
       <div className="my-16 flex justify-center">
         <div className="max-w-4xl w-full px-2 sm:px-2 md:px-4 lg:px-6 xl:px-6 2xl:px-8">
@@ -701,48 +416,23 @@ export const AdminPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Create Category Modal */}
-          <div className="mb-6">
-            <h2 className="text-xl font-primaryMedium mb-2">
-              {t("admin.createDate.title")}
+          {/* Category List */}
+          <div className="mb-6 flex justify-between items-center">
+            <h2 className="text-xl font-primaryMedium">
+              {t("admin.dateList.title")}
             </h2>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5"
-                placeholder={t("admin.createDate.placeholder")}
-                value={newCategoryName}
-                onChange={handleNewCategoryChange}
-              />
-              <button
-                onClick={handleCreateCategory}
-                disabled={loading}
-                className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-2 py-2.5 disabled:opacity-50 flex items-center justify-center min-w-12 sm:w-28"
-              >
-                {createdLoading ? (
-                  <Loading size="sm" />
-                ) : (
-                  <>
-                    <span className="hidden sm:inline">
-                      {t("admin.createDate.button")}
-                    </span>
-                    <AddCircleIcon className="sm:hidden" size={18} />
-                  </>
-                )}
-              </button>
-            </div>
-            {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+            {/* Create Category Button */}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-3 py-2.5 sm:w-36 flex items-center justify-center gap-1"
+            >
+              <AddCircleIcon size={18} className="sm:hidden" />
+              <span className="hidden sm:inline">
+                {t("admin.createDate.button")}
+              </span>
+            </button>
           </div>
 
-          {/* Error Display */}
-          {createError && (
-            <p className="text-red-400 text-sm mb-4">{createError}</p>
-          )}
-
-          {/* Category List */}
-          <h2 className="text-xl font-primaryMedium mb-4 mt-12">
-            {t("admin.dateList.title")}
-          </h2>
           <div className="space-y-4">
             {categories.map((category) => (
               <div
@@ -799,11 +489,24 @@ export const AdminPage: React.FC = () => {
                           ? t("admin.dateList.selected")
                           : t("admin.dateList.notSelected")}
                       </p>
+                      {category.quantity &&
+                        (category.quantity.male_total > 0 ||
+                          category.quantity.female_total > 0) && (
+                          <p className="text-xs font-primaryRegular text-gray-500 mt-0.5">
+                            Nam: {category.quantity.male_current}/
+                            {category.quantity.male_total} · Nữ:{" "}
+                            {category.quantity.female_current}/
+                            {category.quantity.female_total}
+                          </p>
+                        )}
                     </div>
                   </div>
                   <div className="flex space-x-2 mr-0.5">
                     <button
-                      onClick={() => setAddParticipantCategoryId(category._id)}
+                      onClick={() => {
+                        setAddParticipantCategoryId(category._id);
+                        dispatch(fetchCategoryById(category._id));
+                      }}
                       className="text-black w-10 h-10 bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-green-300 font-primaryMedium rounded-lg text-sm flex items-center justify-center"
                     >
                       <AddTeamIcon size={18} />
@@ -826,7 +529,6 @@ export const AdminPage: React.FC = () => {
                 {expandedCategories.includes(category._id) && (
                   <>
                     <hr className="mt-4 -mx-2.5 border-gray-300" />
-                    {/* Calculate & Export inline section */}
                     <div className="mt-4 pb-2 mx-1 sm:flex sm:gap-6">
                       {/* Left: Calculate */}
                       <div className="sm:flex-1">
@@ -877,15 +579,12 @@ export const AdminPage: React.FC = () => {
                                 t("admin.categoryDetail.calculate")
                               )}
                             </button>
-
                             <button
                               onClick={() => handleExport(category)}
                               disabled={exportLoading || uploadQrLoading}
                               className="mt-3 text-black bg-blue-400 hover:bg-blue-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
                             >
-                              {uploadQrLoading ? (
-                                <Loading size="sm" />
-                              ) : exportLoading ? (
+                              {uploadQrLoading || exportLoading ? (
                                 <Loading size="sm" />
                               ) : (
                                 t("admin.categoryDetail.showResult")
@@ -895,7 +594,7 @@ export const AdminPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Right: Export / QR */}
+                      {/* Right: QR */}
                       <div>
                         <p className="text-md font-primaryMedium text-black mb-4 mt-4 sm:mt-0">
                           <QrCode01Icon
@@ -970,15 +669,12 @@ export const AdminPage: React.FC = () => {
                               t("admin.categoryDetail.calculate")
                             )}
                           </button>
-
                           <button
                             onClick={() => handleExport(category)}
                             disabled={exportLoading || uploadQrLoading}
                             className="mt-3 text-black bg-blue-400 hover:bg-blue-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2 disabled:opacity-50"
                           >
-                            {uploadQrLoading ? (
-                              <Loading size="sm" />
-                            ) : exportLoading ? (
+                            {uploadQrLoading || exportLoading ? (
                               <Loading size="sm" />
                             ) : (
                               t("admin.categoryDetail.showResult")
@@ -1010,16 +706,16 @@ export const AdminPage: React.FC = () => {
                           <table className="w-full text-sm border-collapse">
                             <thead>
                               <tr className="border-b border-gray-200 text-gray-600">
-                                <th className="py-2 px-2 text-left font-primaryMedium w-10">
+                                <th className="py-2 px-2 text-center font-primaryMedium w-10">
                                   {t("admin.table.no")}
                                 </th>
-                                <th className="py-2 px-2 text-left font-primaryMedium">
+                                <th className="py-2 px-2 text-center font-primaryMedium">
                                   {t("admin.table.name")}
                                 </th>
-                                {/* <th className="py-2 px-2 text-left font-primaryMedium">
-                                    Số lượng
-                                  </th> */}
-                                <th className="py-2 px-2 text-left font-primaryMedium">
+                                <th className="py-2 px-2 text-center font-primaryMedium">
+                                  {t("admin.table.gender")}
+                                </th>
+                                <th className="py-2 px-2 text-center font-primaryMedium">
                                   {t("admin.table.amount")}
                                 </th>
                                 <th className="py-2 px-2 text-center font-primaryMedium">
@@ -1037,16 +733,16 @@ export const AdminPage: React.FC = () => {
                                     key={participant._id}
                                     className="border-b border-gray-100"
                                   >
-                                    <td className="py-2 px-2 text-gray-500 font-primaryRegular">
+                                    <td className="py-2 px-2 text-gray-500 font-primaryRegular text-center">
                                       {index + 1}
                                     </td>
-                                    <td className="py-2 px-2 font-primaryMedium">
+                                    <td className="py-2 px-2 font-primaryMedium text-center">
                                       {participant.name}
                                     </td>
-                                    {/* <td className="py-2.5 px-2 font-primaryRegular">
-                                        {participant.quantity}
-                                      </td> */}
-                                    <td className="py-2 px-2 font-primaryRegular">
+                                    <td className="py-2.5 capitalize px-2 font-primaryRegular text-center">
+                                      {participant.gender}
+                                    </td>
+                                    <td className="py-2 px-2 font-primaryRegular text-center">
                                       {participant.money > 0
                                         ? (
                                             Math.round(
@@ -1077,9 +773,9 @@ export const AdminPage: React.FC = () => {
                                             categoryId: category._id,
                                           })
                                         }
-                                        className="text-black bg-red-400 hover:bg-red-500 font-primaryMedium rounded-lg text-xs px-3 py-1.5"
+                                        className="text-black bg-red-400 hover:bg-red-500 font-primaryMedium rounded-lg text-xs px-2 py-1.5"
                                       >
-                                        {t("admin.dateList.delete")}
+                                        <Delete02Icon size={18} />
                                       </button>
                                     </td>
                                   </tr>
@@ -1119,171 +815,54 @@ export const AdminPage: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Create Category Modal */}
+        {showCreateModal && (
+          <ModifyCategoryComponent
+            mode="create"
+            onClose={() => setShowCreateModal(false)}
+            onSuccess={(msg) => addToast(msg, "success")}
+          />
+        )}
+
         {/* Edit Category Modal */}
         {editCategory && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">
-                {t("admin.editModal.title")}
-              </h2>
-              <label className="font-primaryMedium">
-                {t("admin.editModal.dateLabel")}
-              </label>
-              <input
-                type="text"
-                className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5 mb-3 mt-1"
-                value={editCategory.name}
-                onChange={handleEditCategoryNameChange}
-              />
-              <label className="flex items-center mb-6 font-primaryMedium">
-                <input
-                  type="checkbox"
-                  checked={editCategory.is_selected}
-                  onChange={handleEditCategorySelectedChange}
-                  className="mr-2 w-4 h-4 accent-green-500"
-                />
-                <span className="text-sm">
-                  {t("admin.editModal.selectDate")}
-                </span>
-              </label>
-              {updateError && (
-                <p className="text-red-400 text-sm mb-4">{updateError}</p>
-              )}
-              <div className="flex space-x-4 items-center justify-center mt-4">
-                <button
-                  onClick={() => handleUpdateCategory(editCategory)}
-                  disabled={loading}
-                  className="text-black bg-green-500 hover:bg-green-600 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 flex items-center justify-center space-x-2 min-w-[80px]"
-                >
-                  {loading ? <Loading size="sm" /> : t("admin.editModal.save")}
-                </button>
-                <button
-                  onClick={() => {
-                    setEditCategory(null);
-                    setUpdateError(null);
-                  }}
-                  className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 flex items-center justify-center"
-                >
-                  {t("admin.editModal.cancel")}
-                </button>
-              </div>
-            </div>
-          </div>
+          <ModifyCategoryComponent
+            mode="update"
+            category={editCategory}
+            onClose={() => setEditCategory(null)}
+            onSuccess={(msg) => addToast(msg, "success")}
+          />
         )}
+
         {/* Delete Category Modal */}
         {deleteCategoryId && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">
-                {t("admin.deleteModal.title")}
-              </h2>
-              <p className="text-sm mb-4">
-                {t("admin.deleteModal.confirmDate")}
-              </p>
-              {deleteCategoryErr && (
-                <p className="text-red-400 text-sm mb-4 text-center">
-                  {deleteCategoryErr}
-                </p>
-              )}
-              <div className="flex space-x-4 items-center justify-center">
-                <button
-                  onClick={() => handleDeleteCategory(deleteCategoryId)}
-                  disabled={loading}
-                  className="text-black bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 flex items-center space-x-2 min-w-[80px]"
-                >
-                  {loading ? (
-                    <Loading size="sm" />
-                  ) : (
-                    t("admin.deleteModal.delete")
-                  )}
-                </button>
-                <button
-                  onClick={() => setDeleteCategoryId(null)}
-                  className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
-                >
-                  {t("admin.editModal.cancel")}
-                </button>
-              </div>
-            </div>
-          </div>
+          <DeleteComponent
+            type="category"
+            categoryId={deleteCategoryId}
+            onClose={() => setDeleteCategoryId(null)}
+            onSuccess={(msg) => addToast(msg, "success")}
+          />
         )}
+
         {/* Add Participant Modal */}
         {addParticipantCategoryId && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
-              <h3 className="text-lg font-primaryBold mb-4">{t("admin.addParticipantModal.title")}</h3>
-              <input
-                type="text"
-                value={newParticipantName}
-                onChange={(e) => setNewParticipantName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddParticipant()}
-                placeholder={t("admin.addParticipantModal.placeholder")}
-                className="bg-gray-50 border border-gray-300 font-primaryRegular text-gray-900 text-sm rounded-lg focus:ring-gray-300 focus:border-gray-100 block w-full p-2.5 mb-3"
-                autoFocus
-              />
-              {addParticipantError && (
-                <p className="text-red-500 text-sm mb-3">{addParticipantError}</p>
-              )}
-              <div className="flex justify-end space-x-2">
-                <button
-                  onClick={handleAddParticipant}
-                  disabled={participantsLoading || !newParticipantName.trim()}
-                  className="text-black bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-green-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50"
-                >
-                  {participantsLoading ? <Loading size="sm" /> : t("admin.addParticipantModal.confirm")}
-                </button>
-                <button
-                  onClick={() => { setAddParticipantCategoryId(null); setNewParticipantName(""); setAddParticipantError(null); }}
-                  className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
-                >
-                  {t("admin.addParticipantModal.cancel")}
-                </button>
-              </div>
-            </div>
-          </div>
+          <AddParticipantComponent
+            categoryId={addParticipantCategoryId}
+            onClose={() => setAddParticipantCategoryId(null)}
+            onSuccess={(msg) => addToast(msg, "success")}
+          />
         )}
 
         {/* Delete Participant Modal */}
         {deleteParticipantInfo && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-lg mx-4">
-              <h2 className="text-xl font-primaryBold mb-5">
-                {t("admin.deleteModal.title")}
-              </h2>
-              <p className="text-md font-primaryMedium mb-4">
-                {t("admin.deleteModal.confirmParticipant")}
-              </p>
-              {deleteParticipantError && (
-                <p className="text-red-400 text-sm mb-7 text-center">
-                  {deleteParticipantError}
-                </p>
-              )}
-              <div className="flex space-x-4 items-center justify-center">
-                <button
-                  onClick={() =>
-                    handleDeleteParticipant(
-                      deleteParticipantInfo.participantId,
-                      deleteParticipantInfo.categoryId,
-                    )
-                  }
-                  disabled={loading}
-                  className="text-black bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50"
-                >
-                  {participantsLoading ? (
-                    <Loading size="sm" />
-                  ) : (
-                    t("admin.deleteModal.delete")
-                  )}
-                </button>
-                <button
-                  onClick={() => setDeleteParticipantInfo(null)}
-                  className="text-black bg-gray-400 hover:bg-gray-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-5 py-2.5"
-                >
-                  {t("admin.editModal.cancel")}
-                </button>
-              </div>
-            </div>
-          </div>
+          <DeleteComponent
+            type="participant"
+            participantId={deleteParticipantInfo.participantId}
+            categoryId={deleteParticipantInfo.categoryId}
+            onClose={() => setDeleteParticipantInfo(null)}
+            onSuccess={(msg) => addToast(msg, "success")}
+          />
         )}
       </div>
       <ChatBot onRefreshNeeded={() => dispatch(fetchCategories())} />

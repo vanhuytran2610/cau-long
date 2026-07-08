@@ -6,7 +6,11 @@
         "maximize": "Maximize",
         "inputPlaceholder": "Type a message...",
         "welcomeFallback": "Hello! How can I help you?",
-        "errorMessage": "An error occurred. Please try again."
+        "errorMessage": "An error occurred. Please try again.",
+        "uploadImage": "Upload image",
+        "removeImage": "Remove image",
+        "imgSizeError": "Image must be under 5MB.",
+        "imgUploadError": "Image upload failed. Please try again."
     },
     "component1": {
         "message": "Hey, want to play badminton {{categoryName}}?",
@@ -39,7 +43,7 @@
     },
     "component12": {
         "message": "{{categoryName}} it is!!!",
-        "formMessage": "Awesome!!! If you're coming, fill in your name and press \"OK\", otherwise press \"Next time\" 🙋‍♀️🙋‍♂️🙆‍♂️"
+        "formMessage": "Awesome!!! If you're coming, fill in your info and press \"OK\", otherwise press \"Next time\" 🙋‍♀️🙋‍♂️🙆‍♂️"
     },
     "componentMeme1": {
         "linkText": "View drop-in fees here"
@@ -47,10 +51,13 @@
     "formComponent": {
         "inputNamePlaceholder": "Enter your name...",
         "rejectInput": "The session has started, you can no longer register!",
-        "noteInput": "If you're registering as a drop-in, enter \"Name (drop-in)\"!!!",
         "nextTime": "Next time",
         "homepage": "Home",
-        "modalClose": "Close"
+        "modalClose": "Close",
+        "levelPlaceholder": "Level (optional)",
+        "male": "Male",
+        "female": "Female",
+        "slotFull": "(full)"
     },
     "mainPage": {
         "title": "Badminton {{categoryName}}"
@@ -83,8 +90,10 @@
         },
         "createDate": {
             "title": "Create New Date",
-            "button": "Create Date",
-            "placeholder": "Date Jun 27, 7:30pm"
+            "button": "Create New Date",
+            "placeholder": "Date Jun 27, 7:30pm",
+            "contentPlaceholder": "Detail (Eg: Looking for players, 8 males (TB, TB+), 6 females (TB-, TB))",
+            "submitButton": "Add"
         },
         "dateList": {
             "title": "Badminton Sessions",
@@ -110,15 +119,17 @@
             "name": "Name",
             "amount": "Amount",
             "isPaid": "Paid",
-            "deleteParticipant": "Remove member",
-            "noParticipants": "No participants for this session!!!"
+            "deleteParticipant": "Remove",
+            "noParticipants": "No participants for this session!!!",
+            "gender": "Gender"
         },
         "editModal": {
             "title": "Edit Date",
             "dateLabel": "Date:",
             "selectDate": "Select Date (Choose this date to vote)",
             "save": "Save",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "contentLabel": "Detail"
         },
         "deleteModal": {
             "title": "Confirm Delete",
@@ -146,7 +157,8 @@
             "alreadyLoggedOut": "You are already logged out",
             "logoutSuccess": "Logged out successfully!",
             "loginToCreate": "Please log in to create a date",
-            "loginToUpdate": "Please log in to update a date"
+            "loginToUpdate": "Please log in to update a date",
+            "qrImgSizeError": "QR image must be under 5MB."
         },
         "addParticipantModal": {
             "title": "Add Participant",

@@ -6,7 +6,8 @@ export const Component11: React.FC<{
   onGoCom1Click: () => void;
   categoryId: string;
   categoryName: string;
-}> = ({ onGoCom1Click, categoryId, categoryName }) => {
+  categoryContent: string;
+}> = ({ onGoCom1Click, categoryId, categoryName, categoryContent }) => {
   const [showDelayedContent, setShowDelayedContent] = useState(false);
 
   useEffect(() => {
@@ -27,6 +28,9 @@ export const Component11: React.FC<{
     >
       <p className="text-red-600 font-primaryBold text-3xl text-center pb-10">
         {categoryName} nhé! Bạn không thoát được đâu!
+      </p>
+      <p className="text-lg font-primaryMedium pb-8 text-gray-600">
+        {categoryContent}
       </p>
       <ComponentMeme2 />
       {(categoryId || categoryId !== "") && showDelayedContent && (

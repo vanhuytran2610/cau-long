@@ -42,8 +42,8 @@ export const fetchSuggestions = createAsyncThunk<Suggestion[], void, { state: Ro
     const response = await fetch(`${AGENT_URL}/suggestions`, {
       headers: { "Accept-Language": language },
     });
-    const data = await response.json();
-    return data.suggestions ?? [];
+    const json = await response.json();
+    return json.data?.suggestions ?? [];
   }
 );
 
@@ -60,8 +60,9 @@ export const fetchWelcome = createAsyncThunk<string, void, { state: RootState }>
           "Accept-Language": language,
         },
       });
-      const data = await response.json();
-      return data.reply;
+      const json = await response.json();
+      if (json.status_code !== 200) return rejectWithValue("failed");
+      return json.data?.reply;
     } catch {
       return rejectWithValue("failed");
     }
@@ -89,8 +90,9 @@ export const sendChatMessage = createAsyncThunk<
         },
         body: JSON.stringify({ message: text, thread_id: threadId }),
       });
-      const data = await response.json();
-      return { reply: data.reply, thread_id: data.thread_id };
+      const json = await response.json();
+      if (json.status_code !== 200) return rejectWithValue("failed");
+      return { reply: json.data?.reply, thread_id: json.data?.thread_id };
     } catch {
       return rejectWithValue("failed");
     }
@@ -105,9 +107,9 @@ export const resetConversation = createAsyncThunk<string, void, { state: RootSta
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
-    const data = await response.json();
+    const json = await response.json();
     await dispatch(fetchWelcome());
-    return data.thread_id;
+    return json.data?.thread_id;
   }
 );
 
@@ -121,8 +123,8 @@ const chatbotSlice = createSlice({
     setIsFullscreen(state, action: PayloadAction<boolean>) {
       state.isFullscreen = action.payload;
     },
-    addUserMessage(state, action: PayloadAction<string>) {
-      state.messages.push({ role: "user", content: action.payload });
+    addUserMessage(state, action: PayloadAction<{ content: string; imageUrl?: string }>) {
+      state.messages.push({ role: "user", content: action.payload.content, imageUrl: action.payload.imageUrl });
       localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(state.messages));
     },
     clearConversation(state) {

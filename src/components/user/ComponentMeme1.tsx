@@ -1,5 +1,5 @@
 import React from "react";
-import meme1 from "../assets/images/meme1.gif";
+import meme1 from "../../assets/images/meme1.gif";
 import { Link } from "react-router";
 import { PointingLeft01Icon, PointingRight01Icon } from "hugeicons-react";
 import { useTranslation } from "react-i18next";

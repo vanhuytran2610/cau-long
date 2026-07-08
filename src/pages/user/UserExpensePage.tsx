@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import Loading from "../components/Loading";
+import Loading from "../../components/Loading";
 import {
   InformationDiamondIcon,
   CheckmarkCircle03Icon,
   Home09Icon,
 } from "hugeicons-react";
-import { fetchUserCategories } from "../redux/userSlice";
-import { useAppDispatch, type RootState } from "../redux/store";
+import { fetchUserCategories } from "../../redux/userSlice";
+import { useAppDispatch, type RootState } from "../../redux/store";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { setLanguage } from "../redux/languageSlice";
+import { setLanguage } from "../../redux/languageSlice";
 
 export const UserExpensePage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -26,7 +26,7 @@ export const UserExpensePage: React.FC = () => {
   useEffect(() => {
     document.title = t("expense.title");
     dispatch(fetchUserCategories());
-  }, [dispatch]);
+  }, [dispatch, language]);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories((prev) =>
