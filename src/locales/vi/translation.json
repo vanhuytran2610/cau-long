@@ -165,6 +165,21 @@
             "placeholder": "Nhập tên thành viên",
             "confirm": "Thêm",
             "cancel": "Hủy"
+        },
+        "sessionModal": {
+            "title": "Phiên đăng nhập sắp hết hạn",
+            "titleTimedOut": "Phiên đăng nhập đã hết hạn",
+            "message": "Bạn có muốn tiếp tục không? Tự động đăng xuất sau {{count}} giây.",
+            "messageTimedOut": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.",
+            "continue": "Tiếp tục",
+            "login": "Đăng nhập lại"
+        },
+        "faq": {
+            "title": "FAQ",
+            "backButton": "Quay lại",
+            "helpButton": "FAQ",
+            "subtitle": "Các câu hỏi thường gặp về cách sử dụng trang quản lý admin.",
+            "footer": "Không tìm thấy câu trả lời? Liên hệ quản trị viên hệ thống."
         }
     }
 }

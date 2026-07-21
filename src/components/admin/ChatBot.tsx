@@ -30,7 +30,7 @@ const IMG_MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 const ChatBot: React.FC<ChatBotProps> = ({ onRefreshNeeded }) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
-  const token = useSelector((state: RootState) => state.auth.token);
+  const token = useSelector((state: RootState) => state.auth.accessToken);
   const language = useSelector((state: RootState) => state.language.language);
   const { messages, loading, suggestions, isOpen, isFullscreen } = useSelector(
     (state: RootState) => state.chatbot,

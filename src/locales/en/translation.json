@@ -165,6 +165,21 @@
             "placeholder": "Enter participant name",
             "confirm": "Add",
             "cancel": "Cancel"
+        },
+        "sessionModal": {
+            "title": "Session About to Expire",
+            "titleTimedOut": "Session Expired",
+            "message": "Do you want to stay logged in? Auto logout in {{count}} seconds.",
+            "messageTimedOut": "Your session has expired. Please log in again to continue.",
+            "continue": "Stay Logged In",
+            "login": "Log In Again"
+        },
+        "faq": {
+            "title": "FAQ",
+            "backButton": "Back to Admin",
+            "helpButton": "FAQ",
+            "subtitle": "Frequently asked questions about using the admin panel.",
+            "footer": "Can't find the answer? Contact the system administrator."
         }
     }
 }

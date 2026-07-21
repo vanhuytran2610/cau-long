@@ -3,6 +3,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import { AGENT_URL } from "../helpers/constants";
 import type { Message, Suggestion } from "../interface/ChatbotInterface";
 import type { RootState } from "./store";
+import { updateTokens } from "./authSlice";
 import i18n from "../i18n";
 
 const STORAGE_MESSAGES_KEY = "chatbot_messages";
@@ -50,12 +51,12 @@ export const fetchSuggestions = createAsyncThunk<Suggestion[], void, { state: Ro
 export const fetchWelcome = createAsyncThunk<string, void, { state: RootState }>(
   "chatbot/fetchWelcome",
   async (_, { getState, rejectWithValue }) => {
-    const { token } = getState().auth;
+    const { accessToken } = getState().auth;
     const language = getState().language.language;
     try {
       const response = await fetch(`${AGENT_URL}/welcome`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
           "Accept-Language": language,
         },
@@ -75,23 +76,37 @@ export const sendChatMessage = createAsyncThunk<
   { state: RootState }
 >(
   "chatbot/sendMessage",
-  async (text, { getState, rejectWithValue }) => {
+  async (text, { getState, dispatch, rejectWithValue }) => {
     const state = getState();
-    const token = state.auth.token;
+    const { accessToken, refreshToken } = state.auth;
     const threadId = state.chatbot.threadId;
     const language = state.language.language;
     try {
       const response = await fetch(`${AGENT_URL}/agent`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
           "Accept-Language": language,
         },
-        body: JSON.stringify({ message: text, thread_id: threadId }),
+        body: JSON.stringify({ message: text, thread_id: threadId, refresh_token: refreshToken }),
       });
       const json = await response.json();
       if (json.status_code !== 200) return rejectWithValue("failed");
+
+      // Agent may have refreshed the access token mid-session — sync locally
+      if (json.data?.new_tokens) {
+        const { accessToken: newAccess, refreshToken: newRefresh } = json.data.new_tokens;
+        dispatch(updateTokens({ accessToken: newAccess, refreshToken: newRefresh }));
+        const storedAuth = localStorage.getItem("auth");
+        const current = storedAuth ? JSON.parse(storedAuth) : {};
+        localStorage.setItem("auth", JSON.stringify({
+          ...current,
+          accessToken: newAccess,
+          refreshToken: newRefresh,
+        }));
+      }
+
       return { reply: json.data?.reply, thread_id: json.data?.thread_id };
     } catch {
       return rejectWithValue("failed");
@@ -102,10 +117,10 @@ export const sendChatMessage = createAsyncThunk<
 export const resetConversation = createAsyncThunk<string, void, { state: RootState }>(
   "chatbot/reset",
   async (_, { getState, dispatch }) => {
-    const token = getState().auth.token;
+    const { accessToken } = getState().auth;
     const response = await fetch(`${AGENT_URL}/agent/reset`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
     });
     const json = await response.json();
     await dispatch(fetchWelcome());

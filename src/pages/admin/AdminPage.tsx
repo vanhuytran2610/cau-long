@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   fetchCategories,
   fetchParticipantsByCategory,
@@ -20,9 +21,11 @@ import {
   InformationDiamondIcon,
   QrCode01Icon,
   CheckmarkCircle03Icon,
-  LogoutSquare01Icon,
+  Menu01Icon,
   AddCircleIcon,
   AddTeamIcon,
+  ArrowRight01Icon,
+  ArrowDown01Icon,
 } from "hugeicons-react";
 import type { Category, Participant } from "../../interface/CategoryInterface";
 import ChatBot from "../../components/admin/ChatBot";
@@ -41,6 +44,7 @@ interface Toast {
 export const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { username, logoutLoading, isAuthenticated } = useSelector(
     (state: RootState) => state.auth,
   );
@@ -82,6 +86,7 @@ export const AdminPage: React.FC = () => {
   const [exportErrorMap, setExportErrorMap] = useState<{
     [id: string]: string | null;
   }>({});
+  const [showMenu, setShowMenu] = useState(false);
 
   const checkAuthAndDispatch = (callback: () => void) => {
     if (!isAuthenticated) {
@@ -387,32 +392,77 @@ export const AdminPage: React.FC = () => {
               <div className="flex items-center bg-gray-50 rounded-xl border-2 border-gray-200 p-0.5 text-sm font-primaryMedium">
                 <button
                   onClick={() => dispatch(setLanguage("vi"))}
-                  className={`px-2.5 py-1 rounded-lg transition-colors ${language === "vi" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
+                  className={`px-2.5 py-2 rounded-lg transition-colors ${language === "vi" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
                 >
                   VI
                 </button>
                 <button
                   onClick={() => dispatch(setLanguage("en"))}
-                  className={`px-2.5 py-1 rounded-lg transition-colors ${language === "en" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
+                  className={`px-2.5 py-2 rounded-lg transition-colors ${language === "en" ? "bg-yellow-400 hover:bg-yellow-500 shadow text-black" : "text-gray-500 hover:text-gray-700"}`}
                 >
                   EN
                 </button>
               </div>
+
+              {/* Desktop: individual buttons */}
+              <button
+                onClick={() => navigate("/admin-ql-nnh-110-page/faq")}
+                className="hidden sm:block text-black bg-gray-300 hover:bg-gray-400 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-3 py-2.5"
+              >
+                {t("admin.faq.helpButton")}
+              </button>
               <button
                 onClick={handleLogout}
-                className="text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm px-3 py-2.5 sm:w-28 sm:px-5"
+                className="hidden sm:block text-black bg-red-400 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm w-28 px-5 py-2.5"
               >
-                {logoutLoading ? (
-                  <Loading size="sm" />
-                ) : (
+                {logoutLoading ? <Loading size="sm" /> : t("admin.logout")}
+              </button>
+
+              {/* Mobile: dropdown menu */}
+              <div className="relative sm:hidden">
+                <button
+                  onClick={() => setShowMenu((v) => !v)}
+                  className="text-black bg-gray-200 hover:bg-gray-300 focus:ring-2 focus:ring-gray-300 rounded-lg px-3 py-2.5"
+                >
+                  <Menu01Icon
+                    className="flex items-center justify-center"
+                    size={20}
+                  />
+                </button>
+                {showMenu && (
                   <>
-                    <span className="hidden sm:inline">
-                      {t("admin.logout")}
-                    </span>
-                    <LogoutSquare01Icon className="sm:hidden" size={18} />
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowMenu(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-28 py-1 overflow-hidden">
+                      <button
+                        onClick={() => {
+                          navigate("/admin-ql-nnh-110-page/faq");
+                          setShowMenu(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm font-primaryMedium text-black hover:bg-gray-100 transition-colors"
+                      >
+                        {t("admin.faq.helpButton")}
+                      </button>
+                      <div className="border-t border-gray-100" />
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setShowMenu(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm font-primaryMedium text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
+                      >
+                        {logoutLoading ? (
+                          <Loading size="sm" />
+                        ) : (
+                          <>{t("admin.logout")}</>
+                        )}
+                      </button>
+                    </div>
                   </>
                 )}
-              </button>
+              </div>
             </div>
           </div>
 
@@ -437,10 +487,10 @@ export const AdminPage: React.FC = () => {
             {categories.map((category) => (
               <div
                 key={category._id}
-                className="border border-1 border-gray-300 rounded-lg px-2.5 py-4"
+                className="border border-1 border-gray-300 rounded-lg pl-1 sm:pl-2 pr-1.5 sm:pr-2 py-4"
               >
-                <div className="flex justify-between items-center">
-                  <div className="flex space-x-2.5 w-2/3">
+                <div className="flex justify-between items-center gap-1">
+                  <div className="flex w-2/3">
                     <button
                       onClick={() => toggleParticipants(category._id)}
                       disabled={loadingParticipants.includes(category._id)}
@@ -454,52 +504,41 @@ export const AdminPage: React.FC = () => {
                       {loadingParticipants.includes(category._id) ? (
                         <Loading size="sm" />
                       ) : (
-                        <svg
-                          className="w-4 h-4 transition-transform duration-200"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          style={{
-                            transform: expandedCategories.includes(category._id)
-                              ? "rotate(90deg)"
-                              : "rotate(0deg)",
-                          }}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
+                        <div className="">
+                          {expandedCategories.includes(category._id) ? (
+                            <ArrowDown01Icon size={20} />
+                          ) : (
+                            <ArrowRight01Icon size={20} />
+                          )}
+                        </div>
                       )}
+                      <div className="text-left ml-1.5">
+                        <h3 className="text-lg font-primaryBold">
+                          {category.name}
+                        </h3>
+                        <p
+                          className={`text-sm ${
+                            category.is_selected
+                              ? "font-primaryBold text-green-600"
+                              : "font-primaryRegular text-gray-600"
+                          }`}
+                        >
+                          {category.is_selected
+                            ? t("admin.dateList.selected")
+                            : t("admin.dateList.notSelected")}
+                        </p>
+                        {category.quantity &&
+                          (category.quantity.male_total > 0 ||
+                            category.quantity.female_total > 0) && (
+                            <p className="text-xs font-primaryRegular text-gray-500 mt-0.5">
+                              Nam: {category.quantity.male_current}/
+                              {category.quantity.male_total} · Nữ:{" "}
+                              {category.quantity.female_current}/
+                              {category.quantity.female_total}
+                            </p>
+                          )}
+                      </div>
                     </button>
-                    <div>
-                      <h3 className="text-lg font-primaryBold">
-                        {category.name}
-                      </h3>
-                      <p
-                        className={`text-sm ${
-                          category.is_selected
-                            ? "font-primaryBold text-green-600"
-                            : "font-primaryRegular text-gray-600"
-                        }`}
-                      >
-                        {category.is_selected
-                          ? t("admin.dateList.selected")
-                          : t("admin.dateList.notSelected")}
-                      </p>
-                      {category.quantity &&
-                        (category.quantity.male_total > 0 ||
-                          category.quantity.female_total > 0) && (
-                          <p className="text-xs font-primaryRegular text-gray-500 mt-0.5">
-                            Nam: {category.quantity.male_current}/
-                            {category.quantity.male_total} · Nữ:{" "}
-                            {category.quantity.female_current}/
-                            {category.quantity.female_total}
-                          </p>
-                        )}
-                    </div>
                   </div>
                   <div className="flex space-x-2 mr-0.5">
                     <button
@@ -507,19 +546,19 @@ export const AdminPage: React.FC = () => {
                         setAddParticipantCategoryId(category._id);
                         dispatch(fetchCategoryById(category._id));
                       }}
-                      className="text-black w-10 h-10 bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-green-300 font-primaryMedium rounded-lg text-sm flex items-center justify-center"
+                      className="text-black px-3 py-2.5 bg-green-400 hover:bg-green-500 focus:ring-2 focus:ring-green-300 font-primaryMedium rounded-lg text-sm flex items-center justify-center"
                     >
                       <AddTeamIcon size={18} />
                     </button>
                     <button
                       onClick={() => setEditCategory(category)}
-                      className="text-black w-10 h-10 bg-yellow-400 hover:bg-yellow-500 focus:ring-2 focus:ring-yellow-300 font-primaryMedium rounded-lg text-sm flex items-center justify-center"
+                      className="text-black px-3 py-2.5 bg-yellow-400 hover:bg-yellow-500 focus:ring-2 focus:ring-yellow-300 font-primaryMedium rounded-lg text-sm flex items-center justify-center"
                     >
                       <Edit02Icon size={18} />
                     </button>
                     <button
                       onClick={() => setDeleteCategoryId(category._id)}
-                      className="text-black bg-red-400 w-10 h-10 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm flex items-center justify-center"
+                      className="text-black bg-red-400 px-3 py-2.5 hover:bg-red-500 focus:ring-2 focus:ring-gray-300 font-primaryMedium rounded-lg text-sm flex items-center justify-center"
                     >
                       <Delete02Icon size={18} />
                     </button>
@@ -773,7 +812,7 @@ export const AdminPage: React.FC = () => {
                                             categoryId: category._id,
                                           })
                                         }
-                                        className="text-black bg-red-400 hover:bg-red-500 font-primaryMedium rounded-lg text-xs px-2 py-1.5"
+                                        className="text-black bg-red-400 hover:bg-red-500 font-primaryMedium rounded-lg text-xs px-2 py-2"
                                       >
                                         <Delete02Icon size={18} />
                                       </button>

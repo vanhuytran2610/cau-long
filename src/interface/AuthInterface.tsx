@@ -1,7 +1,9 @@
 export interface AuthState {
   isAuthenticated: boolean;
   username: string | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  sessionExpired: boolean;
   error: string | null;
   loading: boolean;
   logoutLoading: boolean;
@@ -18,7 +20,8 @@ export interface LoginResponse {
   message: string;
   data: {
     username: string;
-    token: string;
+    accessToken: string;
+    refreshToken: string;
   };
 }
 

@@ -6,13 +6,20 @@ import { AdminPage } from "../pages/admin/AdminPage";
 import { UserExpensePage } from "../pages/user/UserExpensePage";
 import { useSelector } from "react-redux";
 import type { RootState } from "../redux/store";
+import { SessionExpiredModal } from "../components/admin/SessionExpiredModal";
+import { useTokenExpiryWatcher } from "../hooks/useTokenExpiryWatcher";
+import { FAQPage } from "../pages/admin/FAQPage";
 
 const ProtectedRoute = () => {
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
+  useTokenExpiryWatcher();
   return isAuthenticated ? (
-    <Outlet />
+    <>
+      <SessionExpiredModal />
+      <Outlet />
+    </>
   ) : (
     <Navigate to="/login-to-ql-page-110" replace />
   );
@@ -46,6 +53,10 @@ const routes = [
           {
             index: true,
             element: <AdminPage />,
+          },
+          {
+            path: "faq",
+            element: <FAQPage />,
           },
         ],
       },
