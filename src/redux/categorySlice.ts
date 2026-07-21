@@ -51,13 +51,13 @@ export const createCategory = createAsyncThunk<
   CreateCategoryPayload,
   { state: RootState }
 >("category/createCategory", async (payload, { getState, rejectWithValue }) => {
-  const { auth } = getState() as { auth: { token: string | null } };
+  const { auth } = getState() as { auth: { accessToken: string | null } };
   try {
     const response = await axiosInstance.post(
       `${API_URL}/api/categories`,
       payload,
       {
-        headers: { Authorization: `Bearer ${auth.token}` },
+        headers: { Authorization: `Bearer ${auth.accessToken}` },
       },
     );
     return response.data;
@@ -73,7 +73,7 @@ export const updateCategory = createAsyncThunk<
   UpdateCategoryPayload,
   { state: RootState }
 >("category/updateCategory", async (payload, { getState, rejectWithValue }) => {
-  const { auth } = getState() as { auth: { token: string | null } };
+  const { auth } = getState() as { auth: { accessToken: string | null } };
   try {
     const response = await axiosInstance.put(
       `${API_URL}/api/categories/${payload.id}`,
@@ -83,7 +83,7 @@ export const updateCategory = createAsyncThunk<
         content: payload.content,
       },
       {
-        headers: { Authorization: `Bearer ${auth.token}` },
+        headers: { Authorization: `Bearer ${auth.accessToken }` },
       },
     );
     return response.data;
@@ -99,12 +99,12 @@ export const deleteCategory = createAsyncThunk<
   string,
   { state: RootState }
 >("category/deleteCategory", async (id, { getState, rejectWithValue }) => {
-  const { auth } = getState() as { auth: { token: string | null } };
+  const { auth } = getState() as { auth: { accessToken: string | null } };
   try {
     const response = await axiosInstance.delete(
       `${API_URL}/api/categories/${id}`,
       {
-        headers: { Authorization: `Bearer ${auth.token}` },
+        headers: { Authorization: `Bearer ${auth.accessToken}` },
       },
     );
     return response.data;
@@ -120,10 +120,10 @@ export const fetchCategories = createAsyncThunk<
   void,
   { state: RootState }
 >("category/fetchCategories", async (_, { getState, rejectWithValue }) => {
-  const { auth } = getState() as { auth: { token: string | null } };
+  const { auth } = getState() as { auth: { accessToken: string | null } };
   try {
     const response = await axiosInstance.get(`${API_URL}/api/categories`, {
-      headers: { Authorization: `Bearer ${auth.token}` },
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
     });
     return response.data;
   } catch (error: any) {
@@ -140,12 +140,12 @@ export const fetchCategoryById = createAsyncThunk<
 >(
   "category/fetchCategoryById",
   async (categoryId, { getState, rejectWithValue }) => {
-    const { auth } = getState() as { auth: { token: string | null } };
+    const { auth } = getState() as { auth: { accessToken: string | null } };
     try {
       const response = await axiosInstance.get(
         `${API_URL}/api/categories/${categoryId}`,
         {
-          headers: { Authorization: `Bearer ${auth.token}` },
+          headers: { Authorization: `Bearer ${auth.accessToken }` },
         },
       );
       return response.data;
@@ -164,12 +164,12 @@ export const fetchParticipantsByCategory = createAsyncThunk<
 >(
   "category/fetchParticipantsByCategory",
   async (categoryId, { getState, rejectWithValue }) => {
-    const { auth } = getState() as { auth: { token: string | null } };
+    const { auth } = getState() as { auth: { accessToken: string | null } };
     try {
       const response = await axiosInstance.get(
         `${API_URL}/api/participants/${categoryId}`,
         {
-          headers: { Authorization: `Bearer ${auth.token}` },
+          headers: { Authorization: `Bearer ${auth.accessToken}` },
         },
       );
       return response.data;
@@ -186,7 +186,7 @@ export const addParticipant = createAsyncThunk<
   AddParticipantPayload,
   { state: RootState }
 >("category/addParticipant", async (payload, { getState, rejectWithValue }) => {
-  const { auth } = getState() as { auth: { token: string | null } };
+  const { auth } = getState() as { auth: { accessToken : string | null } };
   try {
     const response = await axiosInstance.post(
       `${API_URL}/api/participants/${payload.categoryId}`,
@@ -197,7 +197,7 @@ export const addParticipant = createAsyncThunk<
         level: payload.level,
         gender: payload.gender,
       },
-      { headers: { Authorization: `Bearer ${auth.token}` } },
+      { headers: { Authorization: `Bearer ${auth.accessToken}` } },
     );
     return response.data;
   } catch (err: any) {
@@ -214,13 +214,13 @@ export const updateParticipant = createAsyncThunk<
 >(
   "category/updateParticipant",
   async (payload, { getState, rejectWithValue }) => {
-    const { auth } = getState() as { auth: { token: string | null } };
+    const { auth } = getState() as { auth: { accessToken: string | null } };
     try {
       const response = await axiosInstance.put(
         `${API_URL}/api/participants/${payload.categoryId}/${payload.participantId}`,
         { isPaid: payload.isPaid },
         {
-          headers: { Authorization: `Bearer ${auth.token}` },
+          headers: { Authorization: `Bearer ${auth.accessToken}` },
         },
       );
       return response.data;
@@ -239,12 +239,12 @@ export const deleteParticipant = createAsyncThunk<
 >(
   "category/deleteParticipant",
   async ({ participantId, categoryId }, { getState, rejectWithValue }) => {
-    const { auth } = getState() as { auth: { token: string | null } };
+    const { auth } = getState() as { auth: { accessToken: string | null } };
     try {
       const response = await axiosInstance.delete(
         `${API_URL}/api/participants/${categoryId}/${participantId}`,
         {
-          headers: { Authorization: `Bearer ${auth.token}` },
+          headers: { Authorization: `Bearer ${auth.accessToken}` },
         },
       );
       return response.data;
@@ -263,12 +263,12 @@ export const calculateCategory = createAsyncThunk<
 >(
   "category/calculateCategory",
   async (payload, { getState, rejectWithValue }) => {
-    const { auth } = getState() as { auth: { token: string | null } };
+    const { auth } = getState() as { auth: { accessToken: string | null } };
     try {
       const response = await axiosInstance.post(
         `${API_URL}/api/categories/${payload.id}/calculate`,
         { paymentInfo: payload.paymentInfo },
-        { headers: { Authorization: `Bearer ${auth.token}` } },
+        { headers: { Authorization: `Bearer ${auth.accessToken}` } },
       );
       return response.data;
     } catch (error: any) {
@@ -284,12 +284,12 @@ export const exportCategory = createAsyncThunk<
   ExportCategoryPayload,
   { state: RootState }
 >("category/exportCategory", async (payload, { getState, rejectWithValue }) => {
-  const { auth } = getState() as { auth: { token: string | null } };
+  const { auth } = getState() as { auth: { accessToken: string | null } };
   try {
     const response = await axiosInstance.put(
       `${API_URL}/api/categories/${payload.id}/export`,
       { qr_img_url: payload.qr_img_url, qr_img_name: payload.qr_img_name },
-      { headers: { Authorization: `Bearer ${auth.token}` } },
+      { headers: { Authorization: `Bearer ${auth.accessToken}` } },
     );
     return response.data;
   } catch (error: any) {
